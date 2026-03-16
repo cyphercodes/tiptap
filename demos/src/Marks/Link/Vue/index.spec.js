@@ -1,4 +1,4 @@
-import { expect,test } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import { paste } from "tiptap/tests/e2e/helpers.ts"
 
 test.describe('/src/Marks/Link/Vue/', () => {

@@ -1,4 +1,4 @@
-import { expect,test } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 test.describe('/src/Extensions/TextAlign/Vue/', () => {
   test.beforeEach(async ({ page }) => {
@@ -112,7 +112,7 @@ test.describe('/src/Extensions/TextAlign/Vue/', () => {
     await expect(page.locator('.tiptap p')).toHaveCSS('text-align', 'start')
   })
 
-  test('toggle the text to right on the 6th button', async ({ page }) => {
+  test('toggle the text to right on the 6th button removes alignment', async ({ page }) => {
     await page.locator('button:nth-child(6)').click()
 
     await expect(page.locator('.tiptap p')).toHaveCSS('text-align', 'right')

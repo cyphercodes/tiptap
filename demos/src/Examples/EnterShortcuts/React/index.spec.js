@@ -1,4 +1,4 @@
-import { expect,test } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 test.describe('/src/Examples/EnterShortcuts/React/', () => {
   test.beforeEach(async ({ page }) => {
@@ -8,17 +8,17 @@ test.describe('/src/Examples/EnterShortcuts/React/', () => {
     })
   })
 
-  test('should update the hint html when the keyboard shortcut is pressed', async ({ page }) => {
+  test('should update the hint html when Meta+Enter is pressed', async ({ page }) => {
     await page.locator('.tiptap').press('Meta+Enter')
     await expect(page.locator('.hint')).toContainText('Meta-Enter was the last shortcut')
   })
 
-  test('should update the hint html when the keyboard shortcut is pressed', async ({ page }) => {
+  test('should update the hint html when Shift+Enter is pressed', async ({ page }) => {
     await page.locator('.tiptap').press('Shift+Enter')
     await expect(page.locator('.hint')).toContainText('Shift-Enter was the last shortcut')
   })
 
-  test('should update the hint html when the keyboard shortcut is pressed', async ({ page }) => {
+  test('should update the hint html when Control+Enter is pressed', async ({ page }) => {
     await page.locator('.tiptap').press('Control+Enter')
     await expect(page.locator('.hint')).toContainText('Ctrl-Enter was the last shortcut')
   })

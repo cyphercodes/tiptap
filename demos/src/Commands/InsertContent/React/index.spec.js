@@ -1,4 +1,4 @@
-import { expect,test } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 test.describe('/src/Commands/InsertContent/React/', () => {
   test.beforeEach(async ({ page }) => {
@@ -53,7 +53,7 @@ test.describe('/src/Commands/InsertContent/React/', () => {
     expect(await page.locator('.tiptap').innerHTML()).toContain('<p>Hello\n\tworld\n\t\thow\n\t\t\tnice.\ntest\tOK</p>')
   })
 
-  test('should keep newlines and tabs', async ({ page }) => {
+  test('should keep newlines and tabs between tags', async ({ page }) => {
     await page.evaluate(val => {
       document.querySelector('.tiptap').editor.commands.insertContent(val)
     }, '<h1>Tiptap</h1>\n<p><strong>Hello World</strong></p>')
