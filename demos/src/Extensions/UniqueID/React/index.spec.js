@@ -1,13 +1,15 @@
-context('/src/Extensions/UniqueID/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Extensions/UniqueID/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Extensions/UniqueID/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Extensions/UniqueID/React/')
   })
 
-  it('has a heading with an unique ID', () => {
-    cy.get('.ProseMirror h1').should('have.attr', 'data-id')
+  test('has a heading with an unique ID', async ({ page }) => {
+    await expect(page.locator('.ProseMirror h1')).toHaveAttribute('data-id')
   })
 
-  it('has a paragraph with an unique ID', () => {
-    cy.get('.ProseMirror p').should('have.attr', 'data-id')
+  test('has a paragraph with an unique ID', async ({ page }) => {
+    await expect(page.locator('.ProseMirror p').first()).toHaveAttribute('data-id')
   })
 })

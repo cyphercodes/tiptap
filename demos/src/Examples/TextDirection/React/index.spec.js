@@ -1,25 +1,27 @@
-context('/src/Examples/TextDirection/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/TextDirection/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Examples/TextDirection/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/TextDirection/React/')
   })
 
-  it('should apply text direction attributes', () => {
-    cy.get('.tiptap p').first().should('have.attr', 'dir', 'auto')
+  test('should apply text direction attributes', async ({ page }) => {
+    await expect(page.locator('.tiptap p').first()).toHaveAttribute('dir', 'auto')
   })
 
-  it('should change global direction', () => {
-    cy.get('button').contains('RTL').click()
-    cy.get('.tiptap p').first().should('have.attr', 'dir', 'rtl')
+  test('should change global direction', async ({ page }) => {
+    await page.locator('button', { hasText: 'RTL' }).click()
+    await expect(page.locator('.tiptap p').first()).toHaveAttribute('dir', 'rtl')
   })
 
-  it('should set direction on selection', () => {
-    cy.get('.tiptap p').first().click()
-    cy.get('button').contains('Set LTR').click()
-    cy.get('.tiptap p').first().should('have.attr', 'dir', 'ltr')
+  test('should set direction on selection', async ({ page }) => {
+    await page.locator('.tiptap p').first().click()
+    await page.locator('button', { hasText: 'Set LTR' }).click()
+    await expect(page.locator('.tiptap p').first()).toHaveAttribute('dir', 'ltr')
   })
 
-  it('should unset direction', () => {
-    cy.get('button').contains('None').click()
-    cy.get('.tiptap p').first().should('not.have.attr', 'dir')
+  test('should unset direction', async ({ page }) => {
+    await page.locator('button', { hasText: 'None' }).click()
+    await expect(page.locator('.tiptap p').first()).not.toHaveAttribute('dir')
   })
 })

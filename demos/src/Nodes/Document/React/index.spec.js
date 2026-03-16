@@ -1,26 +1,28 @@
-context('/src/Nodes/Document/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Nodes/Document/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Nodes/Document/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Nodes/Document/React/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p></p>')
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p></p>')
     })
   })
 
-  it('should return the document in as json', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      const json = editor.getJSON()
+  test('should return the document in as json', async ({ page }) => {
+    const json = await page.evaluate(() => {
+      return document.querySelector('.tiptap').editor.getJSON()
+    })
 
-      expect(json).to.deep.equal({
-        type: 'doc',
-        content: [
-          {
-            type: 'paragraph',
-          },
-        ],
-      })
+    expect(json).toEqual({
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+        },
+      ],
     })
   })
 })

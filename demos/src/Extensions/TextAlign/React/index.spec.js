@@ -1,127 +1,136 @@
-context('/src/Extensions/TextAlign/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Extensions/TextAlign/React/')
-  })
+import { expect,test } from '@playwright/test'
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example Text</p>')
+test.describe('/src/Extensions/TextAlign/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Extensions/TextAlign/React/')
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p>Example Text</p>')
     })
   })
 
-  it('should parse a null alignment correctly', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example Text</p>')
-      expect(editor.getHTML()).to.eq('<p>Example Text</p>')
+  test('should parse a null alignment correctly', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p>Example Text</p>')
     })
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe('<p>Example Text</p>')
   })
 
-  it('should parse left align text correctly', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p style="text-align: left">Example Text</p>')
-      expect(editor.getHTML()).to.eq('<p style="text-align: left">Example Text</p>')
+  test('should parse left align text correctly', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p style="text-align: left">Example Text</p>')
     })
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<p style="text-align: left">Example Text</p>',
+    )
   })
 
-  it('should parse center align text correctly', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p style="text-align: center">Example Text</p>')
-      expect(editor.getHTML()).to.eq('<p style="text-align: center">Example Text</p>')
+  test('should parse center align text correctly', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p style="text-align: center">Example Text</p>')
     })
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<p style="text-align: center">Example Text</p>',
+    )
   })
 
-  it('should parse right align text correctly', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p style="text-align: right">Example Text</p>')
-      expect(editor.getHTML()).to.eq('<p style="text-align: right">Example Text</p>')
+  test('should parse right align text correctly', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p style="text-align: right">Example Text</p>')
     })
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<p style="text-align: right">Example Text</p>',
+    )
   })
 
-  it('should parse left justify text correctly', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p style="text-align: justify">Example Text</p>')
-      expect(editor.getHTML()).to.eq('<p style="text-align: justify">Example Text</p>')
+  test('should parse left justify text correctly', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p style="text-align: justify">Example Text</p>')
     })
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<p style="text-align: justify">Example Text</p>',
+    )
   })
 
-  it('should keep the text aligned when toggling headings', () => {
+  test('should keep the text aligned when toggling headings', async ({ page }) => {
     const alignments = ['center', 'right', 'justify']
     const headings = [1, 2]
 
-    cy.get('.tiptap').then(([{ editor }]) => {
-      alignments.forEach(alignment => {
-        headings.forEach(level => {
-          editor.commands.setContent(`<p style="text-align: ${alignment}">Example Text</p>`)
-          editor.commands.toggleHeading({ level })
-          expect(editor.getHTML()).to.eq(`<h${level} style="text-align: ${alignment}">Example Text</h${level}>`)
-        })
-      })
-    })
+    for (const alignment of alignments) {
+      for (const level of headings) {
+        await page.evaluate(
+          ({ alignment, level }) => {
+            const editor = document.querySelector('.tiptap').editor
+            editor.commands.setContent(`<p style="text-align: ${alignment}">Example Text</p>`)
+            editor.commands.toggleHeading({ level })
+          },
+          { alignment, level },
+        )
+        expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+          `<h${level} style="text-align: ${alignment}">Example Text</h${level}>`,
+        )
+      }
+    }
   })
 
-  it('aligns the text left on the 1st button', () => {
-    cy.get('button:nth-child(1)').click()
+  test('aligns the text left on the 1st button', async ({ page }) => {
+    await page.locator('button:nth-child(1)').click()
 
-    cy.get('.tiptap').find('p').should('have.css', 'text-align', 'left')
+    await expect(page.locator('.tiptap p')).toHaveCSS('text-align', 'left')
   })
 
-  it('aligns the text center on the 2nd button', () => {
-    cy.get('button:nth-child(2)').click()
+  test('aligns the text center on the 2nd button', async ({ page }) => {
+    await page.locator('button:nth-child(2)').click()
 
-    cy.get('.tiptap').find('p').should('have.css', 'text-align', 'center')
+    await expect(page.locator('.tiptap p')).toHaveCSS('text-align', 'center')
   })
 
-  it('aligns the text right on the 3rd button', () => {
-    cy.get('button:nth-child(3)').click()
+  test('aligns the text right on the 3rd button', async ({ page }) => {
+    await page.locator('button:nth-child(3)').click()
 
-    cy.get('.tiptap').find('p').should('have.css', 'text-align', 'right')
+    await expect(page.locator('.tiptap p')).toHaveCSS('text-align', 'right')
   })
 
-  it('aligns the text justified on the 4th button', () => {
-    cy.get('button:nth-child(4)').click()
+  test('aligns the text justified on the 4th button', async ({ page }) => {
+    await page.locator('button:nth-child(4)').click()
 
-    cy.get('.tiptap').find('p').should('have.css', 'text-align', 'justify')
+    await expect(page.locator('.tiptap p')).toHaveCSS('text-align', 'justify')
   })
 
-  it('aligns the text default on the 5th button', () => {
-    cy.get('button:nth-child(5)').click()
+  test('aligns the text default on the 5th button', async ({ page }) => {
+    await page.locator('button:nth-child(5)').click()
 
-    cy.get('.tiptap').find('p').should('not.have.css', 'text-align', 'left')
+    await expect(page.locator('.tiptap p')).not.toHaveCSS('text-align', 'left')
   })
 
-  it('toggle the text to right on the 6th button', () => {
-    cy.get('button:nth-child(6)').click()
-    cy.get('.tiptap').find('p').should('have.css', 'text-align', 'right')
+  test('toggle the text to right on the 6th button', async ({ page }) => {
+    await page.locator('button:nth-child(6)').click()
+    await expect(page.locator('.tiptap p')).toHaveCSS('text-align', 'right')
 
-    cy.get('button:nth-child(6)').click()
-    cy.get('.tiptap').find('p').should('not.have.css', 'text-align', 'right')
+    await page.locator('button:nth-child(6)').click()
+    await expect(page.locator('.tiptap p')).not.toHaveCSS('text-align', 'right')
   })
 
-  it('aligns the text left when pressing the keyboard shortcut', () => {
-    cy.get('.tiptap')
-      .trigger('keydown', { modKey: true, shiftKey: true, key: 'l' })
-      .find('p')
-      .should('have.css', 'text-align', 'left')
+  test('aligns the text left when pressing the keyboard shortcut', async ({ page }) => {
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Control+Shift+l')
+    await expect(page.locator('.tiptap p')).toHaveCSS('text-align', 'left')
   })
 
-  it('aligns the text center when pressing the keyboard shortcut', () => {
-    cy.get('.tiptap')
-      .trigger('keydown', { modKey: true, shiftKey: true, key: 'e' })
-      .find('p')
-      .should('have.css', 'text-align', 'center')
+  test('aligns the text center when pressing the keyboard shortcut', async ({ page }) => {
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Control+Shift+e')
+    await expect(page.locator('.tiptap p')).toHaveCSS('text-align', 'center')
   })
 
-  it('aligns the text right when pressing the keyboard shortcut', () => {
-    cy.get('.tiptap')
-      .trigger('keydown', { modKey: true, shiftKey: true, key: 'r' })
-      .find('p')
-      .should('have.css', 'text-align', 'right')
+  test('aligns the text right when pressing the keyboard shortcut', async ({ page }) => {
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Control+Shift+r')
+    await expect(page.locator('.tiptap p')).toHaveCSS('text-align', 'right')
   })
 
-  it('aligns the text justified when pressing the keyboard shortcut', () => {
-    cy.get('.tiptap')
-      .trigger('keydown', { modKey: true, shiftKey: true, key: 'j' })
-      .find('p')
-      .should('have.css', 'text-align', 'justify')
+  test('aligns the text justified when pressing the keyboard shortcut', async ({ page }) => {
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Control+Shift+j')
+    await expect(page.locator('.tiptap p')).toHaveCSS('text-align', 'justify')
   })
 })

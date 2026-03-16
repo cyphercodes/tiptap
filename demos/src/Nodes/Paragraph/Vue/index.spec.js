@@ -1,42 +1,54 @@
-context('/src/Nodes/Paragraph/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Nodes/Paragraph/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Nodes/Paragraph/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Nodes/Paragraph/Vue/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.clearContent()
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.clearContent()
     })
   })
 
-  it('should parse paragraphs correctly', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example Text</p>')
-      expect(editor.getHTML()).to.eq('<p>Example Text</p>')
+  test('should parse paragraphs correctly', async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p>Example Text</p>')
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe('<p>Example Text</p>')
 
-      editor.commands.setContent('<p><x-unknown>Example Text</x-unknown></p>')
-      expect(editor.getHTML()).to.eq('<p>Example Text</p>')
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p><x-unknown>Example Text</x-unknown></p>')
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe('<p>Example Text</p>')
 
-      editor.commands.setContent('<p style="display: block;">Example Text</p>')
-      expect(editor.getHTML()).to.eq('<p>Example Text</p>')
-    })
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p style="display: block;">Example Text</p>')
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe('<p>Example Text</p>')
   })
 
-  it('text should be wrapped in a paragraph by default', () => {
-    cy.get('.tiptap').type('Example Text').find('p').should('contain', 'Example Text')
+  test('text should be wrapped in a paragraph by default', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('Example Text')
+    await expect(page.locator('.tiptap p')).toContainText('Example Text')
   })
 
-  it('enter should make a new paragraph', () => {
-    cy.get('.tiptap').type('First Paragraph{enter}Second Paragraph').find('p').should('have.length', 2)
+  test('enter should make a new paragraph', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('First Paragraph')
+    await page.keyboard.press('Enter')
+    await page.locator('.tiptap').pressSequentially('Second Paragraph')
+    await expect(page.locator('.tiptap p')).toHaveCount(2)
 
-    cy.get('.tiptap').find('p:first').should('contain', 'First Paragraph')
+    await expect(page.locator('.tiptap p').first()).toContainText('First Paragraph')
 
-    cy.get('.tiptap').find('p:nth-child(2)').should('contain', 'Second Paragraph')
+    await expect(page.locator('.tiptap p:nth-child(2)')).toContainText('Second Paragraph')
   })
 
-  it('backspace should remove the second paragraph', () => {
-    cy.get('.tiptap').type('{enter}').find('p').should('have.length', 2)
+  test('backspace should remove the second paragraph', async ({ page }) => {
+    await page.keyboard.press('Enter')
+    await expect(page.locator('.tiptap p')).toHaveCount(2)
 
-    cy.get('.tiptap').type('{backspace}').find('p').should('have.length', 1)
+    await page.keyboard.press('Backspace')
+    await expect(page.locator('.tiptap p')).toHaveCount(1)
   })
 })

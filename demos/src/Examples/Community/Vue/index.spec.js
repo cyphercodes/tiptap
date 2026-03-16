@@ -1,38 +1,43 @@
-context('/src/Examples/Community/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/Community/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Examples/Community/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/Community/Vue/')
   })
 
-  it('should count the characters correctly', () => {
+  test('should count the characters correctly', async ({ page }) => {
     // check if count text is "44 / 280 characters"
-    cy.get('.character-count').should('contain', '44 / 280 characters')
+    await expect(page.locator('.character-count')).toContainText('44 / 280 characters')
 
     // type in .tiptap
-    cy.get('.tiptap').type(' Hello World')
-    cy.get('.character-count').should('contain', '56 / 280 characters')
+    await page.locator('.tiptap').pressSequentially(' Hello World')
+    await expect(page.locator('.character-count')).toContainText('56 / 280 characters')
 
     // remove content from .tiptap and enter text
-    cy.get('.tiptap').type('{selectall}{backspace}Hello World')
-    cy.get('.character-count').should('contain', '11 / 280 characters')
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Control+a')
+    await page.keyboard.press('Backspace')
+    await page.locator('.tiptap').pressSequentially('Hello World')
+    await expect(page.locator('.character-count')).toContainText('11 / 280 characters')
   })
 
-  it('should mention a user', () => {
-    cy.get('.tiptap').type('{selectall}{backspace}@')
+  test('should mention a user', async ({ page }) => {
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Control+a')
+    await page.keyboard.press('Backspace')
+    await page.locator('.tiptap').pressSequentially('@')
 
     // check if the mention autocomplete is visible
-    cy.get('.dropdown-menu').should('be.visible')
+    await expect(page.locator('.dropdown-menu')).toBeVisible()
 
     // select the first user
-    cy.get('.dropdown-menu button')
-      .first()
-      .then($el => {
-        const name = $el.text()
+    const firstButton = page.locator('.dropdown-menu button').first()
+    const name = await firstButton.textContent()
 
-        $el.click()
+    await firstButton.click()
 
-        // check if the user is mentioned
-        cy.get('.tiptap').should('have.text', `@${name} `)
-        cy.get('.character-count').should('contain', '2 / 280 characters')
-      })
+    // check if the user is mentioned
+    await expect(page.locator('.tiptap')).toHaveText(`@${name} `)
+    await expect(page.locator('.character-count')).toContainText('2 / 280 characters')
   })
 })

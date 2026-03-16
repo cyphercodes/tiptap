@@ -1,65 +1,86 @@
-context('/src/Marks/Code/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Marks/Code/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Marks/Code/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Marks/Code/React/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example Text</p>')
-      cy.get('.tiptap').type('{selectall}')
-    })
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p>Example Text</p>')
+    await page.keyboard.press('Control+a')
   })
 
-  it('should parse code tags correctly', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p><code>Example Text</code></p>')
-      expect(editor.getHTML()).to.eq('<p><code>Example Text</code></p>')
+  test('should parse code tags correctly', async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p><code>Example Text</code></p>')
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<p><code>Example Text</code></p>',
+    )
 
-      editor.commands.setContent('<code>Example Text</code>')
-      expect(editor.getHTML()).to.eq('<p><code>Example Text</code></p>')
-    })
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<code>Example Text</code>')
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<p><code>Example Text</code></p>',
+    )
   })
 
-  it('should mark the selected text as inline code', () => {
-    cy.get('button:first').click()
+  test('should mark the selected text as inline code', async ({ page }) => {
+    await page.locator('button').first().click()
 
-    cy.get('.tiptap').find('code').should('contain', 'Example Text')
+    await expect(page.locator('.tiptap code')).toContainText('Example Text')
   })
 
-  it('should toggle the selected text as inline code', () => {
-    cy.get('button:first').click()
+  test('should toggle the selected text as inline code', async ({ page }) => {
+    await page.locator('button').first().click()
 
-    cy.get('.tiptap').type('{selectall}')
+    await page.keyboard.press('Control+a')
 
-    cy.get('button:first').click()
+    await page.locator('button').first().click()
 
-    cy.get('.tiptap code').should('not.exist')
+    await expect(page.locator('.tiptap code')).toHaveCount(0)
   })
 
-  it('should make the selected text bold when the keyboard shortcut is pressed', () => {
-    cy.get('.tiptap').trigger('keydown', { modKey: true, key: 'e' }).find('code').should('contain', 'Example Text')
+  test('should make the selected text bold when the keyboard shortcut is pressed', async ({ page }) => {
+    await page.keyboard.press('Control+e')
+    await expect(page.locator('.tiptap code')).toContainText('Example Text')
   })
 
-  it('should toggle the selected text bold when the keyboard shortcut is pressed', () => {
-    cy.get('.tiptap').trigger('keydown', { modKey: true, key: 'e' }).find('code').should('contain', 'Example Text')
+  test('should toggle the selected text bold when the keyboard shortcut is pressed', async ({ page }) => {
+    await page.keyboard.press('Control+e')
+    await expect(page.locator('.tiptap code')).toContainText('Example Text')
 
-    cy.get('.tiptap').trigger('keydown', { modKey: true, key: 'e' })
+    await page.keyboard.press('Control+e')
 
-    cy.get('.tiptap code').should('not.exist')
+    await expect(page.locator('.tiptap code')).toHaveCount(0)
   })
 
-  it('should make inline code from the markdown shortcut', () => {
-    cy.get('.tiptap').type('`Example`').find('code').should('contain', 'Example')
+  test('should make inline code from the markdown shortcut', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('`Example`')
+    await expect(page.locator('.tiptap code')).toContainText('Example')
   })
 
-  it('should not create inline code when using space', () => {
-    cy.get('.tiptap').type('``{leftArrow}$foobar{rightArrow} ').find('code').should('not.exist')
+  test('should not create inline code when using space', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('``')
+    await page.keyboard.press('ArrowLeft')
+    await page.locator('.tiptap').pressSequentially('$foobar')
+    await page.keyboard.press('ArrowRight')
+    await page.locator('.tiptap').pressSequentially(' ')
+    await expect(page.locator('.tiptap code')).toHaveCount(0)
   })
 
-  it('should create code when closing with backtick', () => {
-    cy.get('.tiptap')
-      .type('``{leftArrow}$foobar{rightArrow} {backSpace}{backSpace}`')
-      .find('code')
-      .should('contain', '$foobar')
+  test('should create code when closing with backtick', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('``')
+    await page.keyboard.press('ArrowLeft')
+    await page.locator('.tiptap').pressSequentially('$foobar')
+    await page.keyboard.press('ArrowRight')
+    await page.locator('.tiptap').pressSequentially(' ')
+    await page.keyboard.press('Backspace')
+    await page.keyboard.press('Backspace')
+    await page.locator('.tiptap').pressSequentially('`')
+    await expect(page.locator('.tiptap code')).toContainText('$foobar')
   })
 })

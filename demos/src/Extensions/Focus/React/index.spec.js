@@ -1,9 +1,11 @@
-context('/src/Extensions/Focus/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Extensions/Focus/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Extensions/Focus/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Extensions/Focus/React/')
   })
 
-  it('should have class', () => {
-    cy.get('.tiptap p:first').should('have.class', 'has-focus')
+  test('should have class', async ({ page }) => {
+    await expect(page.locator('.tiptap p').first()).toHaveClass(/has-focus/)
   })
 })

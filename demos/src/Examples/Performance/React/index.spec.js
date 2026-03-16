@@ -1,12 +1,12 @@
-context('/src/Examples/Performance/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/Performance/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Examples/Performance/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/Performance/React/')
   })
 
-  it('should have a working tiptap instance', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      // eslint-disable-next-line
-      expect(editor).to.not.be.null
-    })
+  test('should have a working tiptap instance', async ({ page }) => {
+    const editor = await page.evaluate(() => document.querySelector('.tiptap').editor)
+    expect(editor).not.toBeNull()
   })
 })

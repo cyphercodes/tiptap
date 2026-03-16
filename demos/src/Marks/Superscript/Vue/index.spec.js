@@ -1,39 +1,43 @@
-context('/src/Marks/Superscript/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Marks/Superscript/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Marks/Superscript/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Marks/Superscript/Vue/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example Text</p>')
-      cy.get('.tiptap').type('{selectall}')
-    })
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p>Example Text</p>')
+    await page.keyboard.press('Control+a')
   })
 
-  it('should transform inline style to sup tags', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p><span style="vertical-align: super">Example Text</span></p>')
-      expect(editor.getHTML()).to.eq('<p><sup>Example Text</sup></p>')
-    })
+  test('should transform inline style to sup tags', async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p><span style="vertical-align: super">Example Text</span></p>')
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<p><sup>Example Text</sup></p>',
+    )
   })
 
-  it('sould omit inline style with a different vertical align', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p><span style="vertical-align: middle">Example Text</span></p>')
-      expect(editor.getHTML()).to.eq('<p>Example Text</p>')
-    })
+  test('sould omit inline style with a different vertical align', async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p><span style="vertical-align: middle">Example Text</span></p>')
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe('<p>Example Text</p>')
   })
 
-  it('the button should make the selected text bold', () => {
-    cy.get('button:first').click()
+  test('the button should make the selected text bold', async ({ page }) => {
+    await page.locator('button').first().click()
 
-    cy.get('.tiptap').find('sup').should('contain', 'Example Text')
+    await expect(page.locator('.tiptap sup')).toContainText('Example Text')
   })
 
-  it('the button should toggle the selected text bold', () => {
-    cy.get('button:first').click()
-    cy.get('.tiptap').type('{selectall}')
-    cy.get('button:first').click()
-    cy.get('.tiptap sup').should('not.exist')
+  test('the button should toggle the selected text bold', async ({ page }) => {
+    await page.locator('button').first().click()
+    await page.keyboard.press('Control+a')
+    await page.locator('button').first().click()
+    await expect(page.locator('.tiptap sup')).toHaveCount(0)
   })
 })

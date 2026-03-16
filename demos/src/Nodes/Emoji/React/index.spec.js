@@ -1,36 +1,48 @@
-context('/src/Nodes/Emoji/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Nodes/Emoji/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Nodes/Emoji/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Nodes/Emoji/React/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p></p>')
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p></p>')
     })
-    cy.get('.tiptap').click()
+    await page.locator('.tiptap').click()
   })
 
-  it('insert :smile: via typing', () => {
-    cy.get('.tiptap').type(':smile:')
+  test('insert :smile: via typing', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially(':smile:')
     // after typing the shortcode the emoji should be rendered as a node
-    cy.get('.tiptap').find('[data-type="emoji"][data-name="smile"]').should('exist')
+    await expect(page.locator('.tiptap [data-type="emoji"][data-name="smile"]')).toBeVisible()
   })
 
-  it('insert button inserts an emoji node', () => {
-    cy.get('button').contains('Insert ⚡').click()
-    cy.get('.tiptap').find('[data-type="emoji"][data-name="zap"]').should('exist')
+  test('insert button inserts an emoji node', async ({ page }) => {
+    await page.locator('button', { hasText: 'Insert ⚡' }).click()
+    await expect(page.locator('.tiptap [data-type="emoji"][data-name="zap"]')).toBeVisible()
   })
 
-  it('pasting a URL containing :x: does not convert the shortcode', () => {
+  test('pasting a URL containing :x: does not convert the shortcode', async ({ page }) => {
     const url = 'https://example-url.com/:x:/sub'
-    cy.get('.tiptap').paste({ paste: url })
+    await page.evaluate(val => {
+      const clipboardData = new DataTransfer()
+      clipboardData.setData('text/plain', val)
+      const pasteEvent = new ClipboardEvent('paste', { clipboardData, bubbles: true, cancelable: true })
+      document.querySelector('.tiptap').dispatchEvent(pasteEvent)
+    }, url)
 
-    cy.get('.tiptap').contains(url)
-    cy.get('.tiptap').find('[data-type="emoji"]').should('not.exist')
+    await expect(page.locator('.tiptap')).toContainText(url)
+    await expect(page.locator('.tiptap [data-type="emoji"]')).toHaveCount(0)
   })
 
-  it('pasting a standalone shortcode converts to an emoji node', () => {
-    cy.get('.tiptap').paste({ paste: ':smile:' })
-    cy.get('.tiptap').find('[data-type="emoji"]').should('exist')
+  test('pasting a standalone shortcode converts to an emoji node', async ({ page }) => {
+    await page.evaluate(() => {
+      const clipboardData = new DataTransfer()
+      clipboardData.setData('text/plain', ':smile:')
+      const pasteEvent = new ClipboardEvent('paste', { clipboardData, bubbles: true, cancelable: true })
+      document.querySelector('.tiptap').dispatchEvent(pasteEvent)
+    })
+    await expect(page.locator('.tiptap [data-type="emoji"]')).toBeVisible()
   })
 })

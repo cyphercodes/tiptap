@@ -1,15 +1,15 @@
-context('/src/Extensions/TypographyWithOverrides/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Extensions/TypographyWithOverrides/Vue/')
-  })
+import { expect,test } from '@playwright/test'
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.clearContent()
+test.describe('/src/Extensions/TypographyWithOverrides/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Extensions/TypographyWithOverrides/Vue/')
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.clearContent()
     })
   })
 
-  it('should use correct override for rightArrow', () => {
-    cy.get('.tiptap').type('-> Hello!').should('contain', '=====> Hello!')
+  test('should use correct override for rightArrow', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('-> Hello!')
+    await expect(page.locator('.tiptap')).toContainText('=====> Hello!')
   })
 })

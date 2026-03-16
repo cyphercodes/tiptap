@@ -1,46 +1,38 @@
-/// <reference types="cypress" />
+import { expect,test } from '@playwright/test'
 
-context('/src/GuideMarkViews/ReactComponent/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/GuideMarkViews/ReactComponent/React/')
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example Text</p><react-component>Mark View Text</react-component>')
-    })
-    cy.get('.tiptap').type('{selectall}')
+test.describe('/src/GuideMarkViews/ReactComponent/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/GuideMarkViews/ReactComponent/React/')
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p>Example Text</p><react-component>Mark View Text</react-component>')
+    await page.keyboard.press('Control+a')
   })
 
-  it('should show the markview', () => {
-    cy.get('.tiptap').find('[data-test-id="mark-view"]').should('exist')
+  test('should show the markview', async ({ page }) => {
+    await expect(page.locator('.tiptap [data-test-id="mark-view"]')).toBeVisible()
   })
 
-  it('should show the markview content in the markview', () => {
-    cy.get('.tiptap').find('[data-test-id="mark-view-content-wrapper"]').should('exist')
-    cy.get('.tiptap').find('[data-test-id="mark-view-content-wrapper"]').should('contain', 'Mark View Text')
+  test('should show the markview content in the markview', async ({ page }) => {
+    await expect(page.locator('.tiptap [data-test-id="mark-view-content-wrapper"]')).toBeVisible()
+    await expect(page.locator('.tiptap [data-test-id="mark-view-content-wrapper"]')).toContainText('Mark View Text')
   })
 
-  it('should allow clicking the button', () => {
-    cy.get('.tiptap').find('[data-test-id="count-button"]').should('contain', 'This button has been clicked 0 times.')
-    cy.get('.tiptap')
-      .find('[data-test-id="count-button"]')
-      .click()
-      .then(() => {
-        cy.get('.tiptap')
-          .find('[data-test-id="count-button"]')
-          .should('contain', 'This button has been clicked 1 times.')
-      })
+  test('should allow clicking the button', async ({ page }) => {
+    await expect(page.locator('.tiptap [data-test-id="count-button"]')).toContainText(
+      'This button has been clicked 0 times.',
+    )
+    await page.locator('.tiptap [data-test-id="count-button"]').click()
+    await expect(page.locator('.tiptap [data-test-id="count-button"]')).toContainText(
+      'This button has been clicked 1 times.',
+    )
   })
 
-  it('should update the attributes of the mark on button click', () => {
-    cy.get('.tiptap').find('[data-test-id="mark-view').should('have.attr', 'data-count', '0')
+  test('should update the attributes of the mark on button click', async ({ page }) => {
+    await expect(page.locator('.tiptap [data-test-id="mark-view"]')).toHaveAttribute('data-count', '0')
 
     // click on the button
-    cy.get('.tiptap')
-      .find('[data-test-id="update-attributes-button"]')
-      .click()
-      .then(() => {
-        requestAnimationFrame(() => {
-          cy.get('.tiptap').find('[data-test-id="mark-view"]').should('have.attr', 'data-count', '1')
-        })
-      })
+    await page.locator('.tiptap [data-test-id="update-attributes-button"]').click()
+    await expect(page.locator('.tiptap [data-test-id="mark-view"]')).toHaveAttribute('data-count', '1')
   })
 })

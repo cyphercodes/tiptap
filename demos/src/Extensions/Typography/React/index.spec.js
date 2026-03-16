@@ -1,100 +1,124 @@
-context('/src/Extensions/Typography/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Extensions/Typography/React/')
-  })
+import { expect,test } from '@playwright/test'
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.clearContent()
+test.describe('/src/Extensions/Typography/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Extensions/Typography/React/')
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.clearContent()
     })
   })
 
-  it('should keep dates as they are', () => {
-    cy.get('.tiptap').type('1/4/2024').should('contain', '1/4/2024')
+  test('should keep dates as they are', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('1/4/2024')
+    await expect(page.locator('.tiptap')).toContainText('1/4/2024')
   })
 
-  it('should make a fraction only with spaces afterwards', () => {
-    cy.get('.tiptap').type('1/4').should('contain', '1/4')
-    cy.get('.tiptap').type('{selectall}{backspace}1/4 ').should('contain', '¼')
+  test('should make a fraction only with spaces afterwards', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('1/4')
+    await expect(page.locator('.tiptap')).toContainText('1/4')
+    await page.keyboard.press('Control+a')
+    await page.keyboard.press('Backspace')
+    await page.locator('.tiptap').pressSequentially('1/4 ')
+    await expect(page.locator('.tiptap')).toContainText('\u00bc')
   })
 
-  it('should make an em dash from two dashes', () => {
-    cy.get('.tiptap').type('-- emDash').should('contain', '— emDash')
+  test('should make an em dash from two dashes', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('-- emDash')
+    await expect(page.locator('.tiptap')).toContainText('\u2014 emDash')
   })
 
-  it('should make an ellipsis from three dots', () => {
-    cy.get('.tiptap').type('... ellipsis').should('contain', '… ellipsis')
+  test('should make an ellipsis from three dots', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('... ellipsis')
+    await expect(page.locator('.tiptap')).toContainText('\u2026 ellipsis')
   })
 
-  it('should make a correct open double quote', () => {
-    cy.get('.tiptap').type('"openDoubleQuote"').should('contain', '“openDoubleQuote')
+  test('should make a correct open double quote', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('"openDoubleQuote"')
+    await expect(page.locator('.tiptap')).toContainText('\u201copenDoubleQuote')
   })
 
-  it('should make a correct close double quote', () => {
-    cy.get('.tiptap').type('"closeDoubleQuote"').should('contain', 'closeDoubleQuote”')
+  test('should make a correct close double quote', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('"closeDoubleQuote"')
+    await expect(page.locator('.tiptap')).toContainText('closeDoubleQuote\u201d')
   })
 
-  it('should make a correct open single quote', () => {
-    cy.get('.tiptap').type("'openSingleQuote'").should('contain', '‘openSingleQuote’')
+  test('should make a correct open single quote', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially("'openSingleQuote'")
+    await expect(page.locator('.tiptap')).toContainText('\u2018openSingleQuote\u2019')
   })
 
-  it('should make a correct close single quote', () => {
-    cy.get('.tiptap').type("'closeSingleQuote'").should('contain', 'closeSingleQuote’')
+  test('should make a correct close single quote', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially("'closeSingleQuote'")
+    await expect(page.locator('.tiptap')).toContainText('closeSingleQuote\u2019')
   })
 
-  it('should make a left arrow', () => {
-    cy.get('.tiptap').type('<- leftArrow').should('contain', '← leftArrow')
+  test('should make a left arrow', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('<- leftArrow')
+    await expect(page.locator('.tiptap')).toContainText('\u2190 leftArrow')
   })
 
-  it('should make a right arrow', () => {
-    cy.get('.tiptap').type('-> rightArrow').should('contain', '→ rightArrow')
+  test('should make a right arrow', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('-> rightArrow')
+    await expect(page.locator('.tiptap')).toContainText('\u2192 rightArrow')
   })
 
-  it('should make a copyright sign', () => {
-    cy.get('.tiptap').type('(c) copyright').should('contain', '© copyright')
+  test('should make a copyright sign', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('(c) copyright')
+    await expect(page.locator('.tiptap')).toContainText('\u00a9 copyright')
   })
 
-  it('should make a registered trademark sign', () => {
-    cy.get('.tiptap').type('(r) registeredTrademark').should('contain', '® registeredTrademark')
+  test('should make a registered trademark sign', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('(r) registeredTrademark')
+    await expect(page.locator('.tiptap')).toContainText('\u00ae registeredTrademark')
   })
 
-  it('should make a trademark sign', () => {
-    cy.get('.tiptap').type('(tm) trademark').should('contain', '™ trademark')
+  test('should make a trademark sign', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('(tm) trademark')
+    await expect(page.locator('.tiptap')).toContainText('\u2122 trademark')
   })
 
-  it('should make a one half', () => {
-    cy.get('.tiptap').type('1/2 oneHalf').should('contain', '½ oneHalf')
+  test('should make a one half', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('1/2 oneHalf')
+    await expect(page.locator('.tiptap')).toContainText('\u00bd oneHalf')
   })
 
-  it('should make a plus/minus sign', () => {
-    cy.get('.tiptap').type('+/- plusMinus').should('contain', '± plusMinus')
+  test('should make a plus/minus sign', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('+/- plusMinus')
+    await expect(page.locator('.tiptap')).toContainText('\u00b1 plusMinus')
   })
 
-  it('should make a not equal sign', () => {
-    cy.get('.tiptap').type('!= notEqual').should('contain', '≠ notEqual')
+  test('should make a not equal sign', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('!= notEqual')
+    await expect(page.locator('.tiptap')).toContainText('\u2260 notEqual')
   })
 
-  it('should make a laquo', () => {
-    cy.get('.tiptap').type('<< laquorow').should('contain', '« laquo')
+  test('should make a laquo', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('<< laquorow')
+    await expect(page.locator('.tiptap')).toContainText('\u00ab laquo')
   })
 
-  it('should make a raquo', () => {
-    cy.get('.tiptap').type('>> raquorow').should('contain', '» raquo')
+  test('should make a raquo', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('>> raquorow')
+    await expect(page.locator('.tiptap')).toContainText('\u00bb raquo')
   })
 
-  it('should make a multiplication sign from an asterisk', () => {
-    cy.get('.tiptap').type('1*1 multiplication').should('contain', '1×1 multiplication')
+  test('should make a multiplication sign from an asterisk', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('1*1 multiplication')
+    await expect(page.locator('.tiptap')).toContainText('1\u00d71 multiplication')
   })
 
-  it('should make a multiplication sign from an x', () => {
-    cy.get('.tiptap').type('1x1 multiplication').should('contain', '1×1 multiplication')
+  test('should make a multiplication sign from an x', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('1x1 multiplication')
+    await expect(page.locator('.tiptap')).toContainText('1\u00d71 multiplication')
   })
 
-  it('should make a multiplication sign from an asterisk with spaces', () => {
-    cy.get('.tiptap').type('1 * 1 multiplication').should('contain', '1 × 1 multiplication')
+  test('should make a multiplication sign from an asterisk with spaces', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('1 * 1 multiplication')
+    await expect(page.locator('.tiptap')).toContainText('1 \u00d7 1 multiplication')
   })
 
-  it('should make a multiplication sign from an x with spaces', () => {
-    cy.get('.tiptap').type('1 x 1 multiplication').should('contain', '1 × 1 multiplication')
+  test('should make a multiplication sign from an x with spaces', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('1 x 1 multiplication')
+    await expect(page.locator('.tiptap')).toContainText('1 \u00d7 1 multiplication')
   })
 })

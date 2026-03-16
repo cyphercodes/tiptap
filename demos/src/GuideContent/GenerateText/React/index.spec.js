@@ -1,6 +1,8 @@
-context('/src/GuideContent/GenerateText/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/GuideContent/GenerateText/React/')
+import { test } from '@playwright/test'
+
+test.describe('/src/GuideContent/GenerateText/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/GuideContent/GenerateText/React/')
   })
 
   // TODO: Write tests

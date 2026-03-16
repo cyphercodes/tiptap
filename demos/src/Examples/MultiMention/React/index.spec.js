@@ -1,224 +1,264 @@
-context('/src/Examples/MultiMention/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/MultiMention/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Examples/MultiMention/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/MultiMention/React/')
   })
 
-  describe('Person mentions (@)', () => {
-    it('should insert a person mention', () => {
-      cy.get('.tiptap').then(([{ editor }]) => {
-        editor.commands.setContent('<p><span data-type="mention" data-id="Lea Thompson">@Lea Thompson</span></p>')
-        cy.get('.tiptap').should(
-          'contain.html',
-          '<span class="mention" data-type="mention" data-id="Lea Thompson" data-mention-suggestion-char="@" contenteditable="false">@Lea Thompson</span>',
-        )
+  test.describe('Person mentions (@)', () => {
+    test('should insert a person mention', async ({ page }) => {
+      await page.evaluate(() => {
+        document
+          .querySelector('.tiptap')
+          .editor.commands.setContent('<p><span data-type="mention" data-id="Lea Thompson">@Lea Thompson</span></p>')
       })
+      expect(await page.locator('.tiptap').innerHTML()).toContain(
+        '<span class="mention" data-type="mention" data-id="Lea Thompson" data-mention-suggestion-char="@" contenteditable="false">@Lea Thompson</span>',
+      )
     })
 
-    it("should open a dropdown menu when I type '@'", () => {
-      cy.get('.tiptap').type('{selectall}{backspace}@')
-      cy.get('.dropdown-menu').should('exist')
+    test("should open a dropdown menu when I type '@'", async ({ page }) => {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('@')
+      await expect(page.locator('.dropdown-menu')).toBeVisible()
     })
 
-    it('should display the correct person options in the dropdown menu', () => {
-      cy.get('.tiptap').type('{selectall}{backspace}@')
-      cy.get('.dropdown-menu').should('exist')
-      cy.get('.dropdown-menu button').should('have.length', 5)
-      cy.get('.dropdown-menu button:nth-child(1)')
-        .should('contain.text', 'Lea Thompson')
-        .and('have.class', 'is-selected')
-      cy.get('.dropdown-menu button:nth-child(2)').should('contain.text', 'Cyndi Lauper')
-      cy.get('.dropdown-menu button:nth-child(3)').should('contain.text', 'Tom Cruise')
-      cy.get('.dropdown-menu button:nth-child(4)').should('contain.text', 'Madonna')
-      cy.get('.dropdown-menu button:nth-child(5)').should('contain.text', 'Jerry Hall')
+    test('should display the correct person options in the dropdown menu', async ({ page }) => {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('@')
+      await expect(page.locator('.dropdown-menu')).toBeVisible()
+      await expect(page.locator('.dropdown-menu button')).toHaveCount(5)
+      await expect(page.locator('.dropdown-menu button:nth-child(1)')).toContainText('Lea Thompson')
+      await expect(page.locator('.dropdown-menu button:nth-child(1)')).toHaveClass(/is-selected/)
+      await expect(page.locator('.dropdown-menu button:nth-child(2)')).toContainText('Cyndi Lauper')
+      await expect(page.locator('.dropdown-menu button:nth-child(3)')).toContainText('Tom Cruise')
+      await expect(page.locator('.dropdown-menu button:nth-child(4)')).toContainText('Madonna')
+      await expect(page.locator('.dropdown-menu button:nth-child(5)')).toContainText('Jerry Hall')
     })
 
-    it('should insert Cyndi Lauper mention when clicking on her option', () => {
-      cy.get('.tiptap').type('{selectall}{backspace}@')
-      cy.get('.dropdown-menu').should('exist')
-      cy.get('.dropdown-menu button:nth-child(2)').contains('Cyndi Lauper').click()
+    test('should insert Cyndi Lauper mention when clicking on her option', async ({ page }) => {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('@')
+      await expect(page.locator('.dropdown-menu')).toBeVisible()
+      await page.locator('.dropdown-menu button:nth-child(2)', { hasText: 'Cyndi Lauper' }).click()
 
-      cy.get('.tiptap').should(
-        'contain.html',
+      expect(await page.locator('.tiptap').innerHTML()).toContain(
         '<span class="mention" data-type="mention" data-id="Cyndi Lauper" data-mention-suggestion-char="@" contenteditable="false">@Cyndi Lauper</span>',
       )
     })
 
-    it('should close the dropdown menu when I move the cursor outside the editor', () => {
-      cy.get('.tiptap').type('{selectall}{backspace}@')
-      cy.get('.dropdown-menu').should('exist')
-      cy.get('.tiptap').type('{moveToStart}')
-      cy.get('.dropdown-menu').should('not.exist')
+    test('should close the dropdown menu when I move the cursor outside the editor', async ({ page }) => {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('@')
+      await expect(page.locator('.dropdown-menu')).toBeVisible()
+      await page.keyboard.press('Home')
+      await expect(page.locator('.dropdown-menu')).toHaveCount(0)
     })
 
-    it('should close the dropdown menu when I press the escape key', () => {
-      cy.get('.tiptap').type('{selectall}{backspace}@')
-      cy.get('.dropdown-menu').should('exist')
-      cy.get('.tiptap').type('{esc}')
-      cy.get('.dropdown-menu').should('not.exist')
+    test('should close the dropdown menu when I press the escape key', async ({ page }) => {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('@')
+      await expect(page.locator('.dropdown-menu')).toBeVisible()
+      await page.keyboard.press('Escape')
+      await expect(page.locator('.dropdown-menu')).toHaveCount(0)
     })
 
-    it('should insert Tom Cruise when selecting his option with the arrow keys and pressing the enter key', () => {
-      cy.get('.tiptap').type('{selectall}{backspace}@')
-      cy.get('.dropdown-menu').should('exist')
-      cy.get('.tiptap').type('{downarrow}{downarrow}')
-      cy.get('.dropdown-menu button:nth-child(3)').should('have.class', 'is-selected')
-      cy.get('.tiptap').type('{enter}')
+    test('should insert Tom Cruise when selecting his option with the arrow keys and pressing the enter key', async ({
+      page,
+    }) => {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('@')
+      await expect(page.locator('.dropdown-menu')).toBeVisible()
+      await page.keyboard.press('ArrowDown')
+      await page.keyboard.press('ArrowDown')
+      await expect(page.locator('.dropdown-menu button:nth-child(3)')).toHaveClass(/is-selected/)
+      await page.keyboard.press('Enter')
 
-      cy.get('.tiptap').should(
-        'contain.html',
+      expect(await page.locator('.tiptap').innerHTML()).toContain(
         '<span class="mention" data-type="mention" data-id="Tom Cruise" data-mention-suggestion-char="@" contenteditable="false">@Tom Cruise</span>',
       )
     })
 
-    it('should show a "No result" message when I search for a person that is not in the list', () => {
-      cy.get('.tiptap').type('{selectall}{backspace}@nonexistent')
-      cy.get('.dropdown-menu').should('exist')
-      cy.get('.dropdown-menu').should('contain.text', 'No result')
+    test('should show a "No result" message when I search for a person that is not in the list', async ({ page }) => {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('@nonexistent')
+      await expect(page.locator('.dropdown-menu')).toBeVisible()
+      await expect(page.locator('.dropdown-menu')).toContainText('No result')
     })
 
-    it('should only show the Madonna option in the dropdown when I type "@mado"', () => {
-      cy.get('.tiptap').type('{selectall}{backspace}@mado')
-      cy.get('.dropdown-menu').should('exist')
-      cy.get('.dropdown-menu button').should('have.length', 1)
-      cy.get('.dropdown-menu button:nth-child(1)').should('contain.text', 'Madonna')
+    test('should only show the Madonna option in the dropdown when I type "@mado"', async ({ page }) => {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('@mado')
+      await expect(page.locator('.dropdown-menu')).toBeVisible()
+      await expect(page.locator('.dropdown-menu button')).toHaveCount(1)
+      await expect(page.locator('.dropdown-menu button:nth-child(1)')).toContainText('Madonna')
     })
 
-    it('should insert Madonna when I type "@mado" and hit enter', () => {
-      cy.get('.tiptap').type('{selectall}{backspace}@mado{enter}')
-      cy.get('.tiptap').should(
-        'contain.html',
+    test('should insert Madonna when I type "@mado" and hit enter', async ({ page }) => {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('@mado')
+      await page.keyboard.press('Enter')
+      expect(await page.locator('.tiptap').innerHTML()).toContain(
         '<span class="mention" data-type="mention" data-id="Madonna" data-mention-suggestion-char="@" contenteditable="false">@Madonna</span>',
       )
     })
   })
 
-  describe('Movie mentions (#)', () => {
-    it('should insert a movie mention', () => {
-      cy.get('.tiptap').then(([{ editor }]) => {
-        editor.commands.setContent(
-          '<p><span data-type="mention" data-id="The Matrix" data-mention-suggestion-char="#">#The Matrix</span></p>',
-        )
-        cy.get('.tiptap').should(
-          'contain.html',
-          '<span class="mention" data-type="mention" data-id="The Matrix" data-mention-suggestion-char="#" contenteditable="false">#The Matrix</span>',
-        )
-      })
-    })
-
-    it("should open a dropdown menu when I type '#'", () => {
-      cy.get('.tiptap').type('{selectall}{backspace}#')
-      cy.get('.dropdown-menu').should('exist')
-    })
-
-    it('should display the correct movie options in the dropdown menu', () => {
-      cy.get('.tiptap').type('{selectall}{backspace}#')
-      cy.get('.dropdown-menu').should('exist')
-      cy.get('.dropdown-menu button').should('have.length', 3)
-      cy.get('.dropdown-menu button:nth-child(1)')
-        .should('contain.text', 'Dirty Dancing')
-        .and('have.class', 'is-selected')
-      cy.get('.dropdown-menu button:nth-child(2)').should('contain.text', 'Pirates of the Caribbean')
-      cy.get('.dropdown-menu button:nth-child(3)').should('contain.text', 'The Matrix')
-    })
-
-    it('should insert Pirates of the Caribbean mention when clicking on its option', () => {
-      cy.get('.tiptap').type('{selectall}{backspace}#')
-      cy.get('.dropdown-menu').should('exist')
-      cy.get('.dropdown-menu button:nth-child(2)').contains('Pirates of the Caribbean').click()
-
-      cy.get('.tiptap').should(
-        'contain.html',
-        '<span class="mention" data-type="mention" data-id="Pirates of the Caribbean" data-mention-suggestion-char="#" contenteditable="false">#Pirates of the Caribbean</span>',
-      )
-    })
-
-    it('should close the dropdown menu when I move the cursor outside the editor', () => {
-      cy.get('.tiptap').type('{selectall}{backspace}#')
-      cy.get('.dropdown-menu').should('exist')
-      cy.get('.tiptap').type('{moveToStart}')
-      cy.get('.dropdown-menu').should('not.exist')
-    })
-
-    it('should close the dropdown menu when I press the escape key', () => {
-      cy.get('.tiptap').type('{selectall}{backspace}#')
-      cy.get('.dropdown-menu').should('exist')
-      cy.get('.tiptap').type('{esc}')
-      cy.get('.dropdown-menu').should('not.exist')
-    })
-
-    it('should insert The Matrix when selecting its option with the arrow keys and pressing the enter key', () => {
-      cy.get('.tiptap').type('{selectall}{backspace}#')
-      cy.get('.dropdown-menu').should('exist')
-      cy.get('.tiptap').type('{downarrow}{downarrow}')
-      cy.get('.dropdown-menu button:nth-child(3)').should('have.class', 'is-selected')
-      cy.get('.tiptap').type('{enter}')
-
-      cy.get('.tiptap').should(
-        'contain.html',
+  test.describe('Movie mentions (#)', () => {
+    test('should insert a movie mention', async ({ page }) => {
+      await page.evaluate(val => {
+        document.querySelector('.tiptap').editor.commands.setContent(val)
+      }, '<p><span data-type="mention" data-id="The Matrix" data-mention-suggestion-char="#">#The Matrix</span></p>')
+      expect(await page.locator('.tiptap').innerHTML()).toContain(
         '<span class="mention" data-type="mention" data-id="The Matrix" data-mention-suggestion-char="#" contenteditable="false">#The Matrix</span>',
       )
     })
 
-    it('should show a "No result" message when I search for a movie that is not in the list', () => {
-      cy.get('.tiptap').type('{selectall}{backspace}#nonexistent')
-      cy.get('.dropdown-menu').should('exist')
-      cy.get('.dropdown-menu').should('contain.text', 'No result')
+    test("should open a dropdown menu when I type '#'", async ({ page }) => {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('#')
+      await expect(page.locator('.dropdown-menu')).toBeVisible()
     })
 
-    it('should only show the Dirty Dancing option in the dropdown when I type "#dir"', () => {
-      cy.get('.tiptap').type('{selectall}{backspace}#dir')
-      cy.get('.dropdown-menu').should('exist')
-      cy.get('.dropdown-menu button').should('have.length', 1)
-      cy.get('.dropdown-menu button:nth-child(1)').should('contain.text', 'Dirty Dancing')
+    test('should display the correct movie options in the dropdown menu', async ({ page }) => {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('#')
+      await expect(page.locator('.dropdown-menu')).toBeVisible()
+      await expect(page.locator('.dropdown-menu button')).toHaveCount(3)
+      await expect(page.locator('.dropdown-menu button:nth-child(1)')).toContainText('Dirty Dancing')
+      await expect(page.locator('.dropdown-menu button:nth-child(1)')).toHaveClass(/is-selected/)
+      await expect(page.locator('.dropdown-menu button:nth-child(2)')).toContainText('Pirates of the Caribbean')
+      await expect(page.locator('.dropdown-menu button:nth-child(3)')).toContainText('The Matrix')
     })
 
-    it('should insert Dirty Dancing when I type "#dir" and hit enter', () => {
-      cy.get('.tiptap').type('{selectall}{backspace}#dir{enter}')
-      cy.get('.tiptap').should(
-        'contain.html',
+    test('should insert Pirates of the Caribbean mention when clicking on its option', async ({ page }) => {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('#')
+      await expect(page.locator('.dropdown-menu')).toBeVisible()
+      await page.locator('.dropdown-menu button:nth-child(2)', { hasText: 'Pirates of the Caribbean' }).click()
+
+      expect(await page.locator('.tiptap').innerHTML()).toContain(
+        '<span class="mention" data-type="mention" data-id="Pirates of the Caribbean" data-mention-suggestion-char="#" contenteditable="false">#Pirates of the Caribbean</span>',
+      )
+    })
+
+    test('should close the dropdown menu when I move the cursor outside the editor', async ({ page }) => {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('#')
+      await expect(page.locator('.dropdown-menu')).toBeVisible()
+      await page.keyboard.press('Home')
+      await expect(page.locator('.dropdown-menu')).toHaveCount(0)
+    })
+
+    test('should close the dropdown menu when I press the escape key', async ({ page }) => {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('#')
+      await expect(page.locator('.dropdown-menu')).toBeVisible()
+      await page.keyboard.press('Escape')
+      await expect(page.locator('.dropdown-menu')).toHaveCount(0)
+    })
+
+    test('should insert The Matrix when selecting its option with the arrow keys and pressing the enter key', async ({
+      page,
+    }) => {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('#')
+      await expect(page.locator('.dropdown-menu')).toBeVisible()
+      await page.keyboard.press('ArrowDown')
+      await page.keyboard.press('ArrowDown')
+      await expect(page.locator('.dropdown-menu button:nth-child(3)')).toHaveClass(/is-selected/)
+      await page.keyboard.press('Enter')
+
+      expect(await page.locator('.tiptap').innerHTML()).toContain(
+        '<span class="mention" data-type="mention" data-id="The Matrix" data-mention-suggestion-char="#" contenteditable="false">#The Matrix</span>',
+      )
+    })
+
+    test('should show a "No result" message when I search for a movie that is not in the list', async ({ page }) => {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('#nonexistent')
+      await expect(page.locator('.dropdown-menu')).toBeVisible()
+      await expect(page.locator('.dropdown-menu')).toContainText('No result')
+    })
+
+    test('should only show the Dirty Dancing option in the dropdown when I type "#dir"', async ({ page }) => {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('#dir')
+      await expect(page.locator('.dropdown-menu')).toBeVisible()
+      await expect(page.locator('.dropdown-menu button')).toHaveCount(1)
+      await expect(page.locator('.dropdown-menu button:nth-child(1)')).toContainText('Dirty Dancing')
+    })
+
+    test('should insert Dirty Dancing when I type "#dir" and hit enter', async ({ page }) => {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('#dir')
+      await page.keyboard.press('Enter')
+      expect(await page.locator('.tiptap').innerHTML()).toContain(
         '<span class="mention" data-type="mention" data-id="Dirty Dancing" data-mention-suggestion-char="#" contenteditable="false">#Dirty Dancing</span>',
       )
     })
   })
 
-  describe('Interaction between mention types', () => {
-    it('should support both mention types in the same document', () => {
-      cy.get('.tiptap').then(([{ editor }]) => {
-        editor.commands.setContent(
-          '<p><span data-type="mention" data-id="Madonna">@Madonna</span> starred in <span data-type="mention" data-id="Dirty Dancing" data-mention-suggestion-char="#">#Dirty Dancing</span></p>',
-        )
+  test.describe('Interaction between mention types', () => {
+    test('should support both mention types in the same document', async ({ page }) => {
+      await page.evaluate(val => {
+        document.querySelector('.tiptap').editor.commands.setContent(val)
+      }, '<p><span data-type="mention" data-id="Madonna">@Madonna</span> starred in <span data-type="mention" data-id="Dirty Dancing" data-mention-suggestion-char="#">#Dirty Dancing</span></p>')
 
-        cy.get('.tiptap').should(
-          'contain.html',
-          '<span class="mention" data-type="mention" data-id="Madonna" data-mention-suggestion-char="@" contenteditable="false">@Madonna</span>',
-        )
-        cy.get('.tiptap').should(
-          'contain.html',
-          '<span class="mention" data-type="mention" data-id="Dirty Dancing" data-mention-suggestion-char="#" contenteditable="false">#Dirty Dancing</span>',
-        )
-      })
+      expect(await page.locator('.tiptap').innerHTML()).toContain(
+        '<span class="mention" data-type="mention" data-id="Madonna" data-mention-suggestion-char="@" contenteditable="false">@Madonna</span>',
+      )
+      expect(await page.locator('.tiptap').innerHTML()).toContain(
+        '<span class="mention" data-type="mention" data-id="Dirty Dancing" data-mention-suggestion-char="#" contenteditable="false">#Dirty Dancing</span>',
+      )
     })
 
-    it('should allow switching between mention types', () => {
-      cy.get('.tiptap').type('{selectall}{backspace}@')
-      cy.get('.dropdown-menu').should('exist')
-      cy.get('.dropdown-menu button:nth-child(1)').should('contain.text', 'Lea Thompson')
+    test('should allow switching between mention types', async ({ page }) => {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('@')
+      await expect(page.locator('.dropdown-menu')).toBeVisible()
+      await expect(page.locator('.dropdown-menu button:nth-child(1)')).toContainText('Lea Thompson')
 
       // Close the dropdown by moving cursor
-      cy.get('.tiptap').type('{moveToStart}')
-      cy.get('.dropdown-menu').should('not.exist')
+      await page.keyboard.press('Home')
+      await expect(page.locator('.dropdown-menu')).toHaveCount(0)
 
       // Open a new dropdown with #
-      cy.get('.tiptap').type('{selectall}{backspace}#')
-      cy.get('.dropdown-menu').should('exist')
-      cy.get('.dropdown-menu button:nth-child(1)').should('contain.text', 'Dirty Dancing')
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('#')
+      await expect(page.locator('.dropdown-menu')).toBeVisible()
+      await expect(page.locator('.dropdown-menu button:nth-child(1)')).toContainText('Dirty Dancing')
     })
 
-    it('should insert both types of mentions in sequence', () => {
-      cy.get('.tiptap').type('{selectall}{backspace}@mado{enter} likes #the{enter}')
+    test('should insert both types of mentions in sequence', async ({ page }) => {
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('@mado')
+      await page.keyboard.press('Enter')
+      await page.locator('.tiptap').pressSequentially(' likes #the')
+      await page.keyboard.press('Enter')
 
-      cy.get('.tiptap').should(
-        'contain.html',
+      expect(await page.locator('.tiptap').innerHTML()).toContain(
         '<span class="mention" data-type="mention" data-id="Madonna" data-mention-suggestion-char="@" contenteditable="false">@Madonna</span>  likes <span class="mention" data-type="mention" data-id="The Matrix" data-mention-suggestion-char="#" contenteditable="false">#The Matrix</span>',
       )
     })

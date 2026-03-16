@@ -1,22 +1,23 @@
-context('/src/Examples/Default/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/Default/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Examples/Default/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/Default/Vue/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<h1>Example Text</h1>')
-      cy.get('.tiptap').type('{selectall}')
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<h1>Example Text</h1>')
     })
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Control+a')
   })
 
-  it('should apply the paragraph style when the keyboard shortcut is pressed', () => {
-    cy.get('.tiptap h1').should('exist')
+  test('should apply the paragraph style when the keyboard shortcut is pressed', async ({ page }) => {
+    await expect(page.locator('.tiptap h1')).toBeVisible()
 
-    cy.get('.tiptap')
-      .trigger('keydown', { modKey: true, altKey: true, key: '0' })
-      .find('p')
-      .should('contain', 'Example Text')
+    await page.keyboard.press('Control+Alt+0')
+    await expect(page.locator('.tiptap p')).toContainText('Example Text')
   })
 
   const buttonMarks = [
@@ -26,33 +27,49 @@ context('/src/Examples/Default/Vue/', () => {
   ]
 
   buttonMarks.forEach(m => {
-    it(`should apply ${m.label} when the button is pressed`, () => {
-      cy.get('.tiptap').type('{selectall}Hello world')
-      cy.get('button').contains('Paragraph').click()
-      cy.get('.tiptap').type('{selectall}')
-      cy.get('button').contains(m.label).click()
-      cy.get(`.tiptap ${m.tag}`).should('exist').should('have.text', 'Hello world')
+    test(`should apply ${m.label} when the button is pressed`, async ({ page }) => {
+      await page.locator('.tiptap').click()
+      await page.keyboard.press('Control+a')
+      await page.locator('.tiptap').pressSequentially('Hello world')
+      await page.locator('button', { hasText: 'Paragraph' }).click()
+      await page.locator('.tiptap').click()
+      await page.keyboard.press('Control+a')
+      await page.locator('button', { hasText: m.label }).click()
+      await expect(page.locator(`.tiptap ${m.tag}`)).toBeVisible()
+      await expect(page.locator(`.tiptap ${m.tag}`)).toHaveText('Hello world')
     })
   })
 
-  it('should clear marks when the button is pressed', () => {
-    cy.get('.tiptap').type('{selectall}Hello world')
-    cy.get('button').contains('Paragraph').click()
-    cy.get('.tiptap').type('{selectall}')
-    cy.get('button').contains('Bold').click()
-    cy.get('.tiptap strong').should('exist').should('have.text', 'Hello world')
-    cy.get('button').contains('Clear marks').click()
-    cy.get('.tiptap strong').should('not.exist')
+  test('should clear marks when the button is pressed', async ({ page }) => {
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Control+a')
+    await page.locator('.tiptap').pressSequentially('Hello world')
+    await page.locator('button', { hasText: 'Paragraph' }).click()
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Control+a')
+    await page.locator('button', { hasText: 'Bold' }).click()
+    await expect(page.locator('.tiptap strong')).toBeVisible()
+    await expect(page.locator('.tiptap strong')).toHaveText('Hello world')
+    await page.locator('button', { hasText: 'Clear marks' }).click()
+    await expect(page.locator('.tiptap strong')).toHaveCount(0)
   })
 
-  it('should clear nodes when the button is pressed', () => {
-    cy.get('.tiptap').type('{selectall}Hello world')
-    cy.get('button').contains('Bullet list').click()
-    cy.get('.tiptap ul').should('exist').should('have.text', 'Hello world')
-    cy.get('.tiptap').type('{enter}A second item{enter}A third item{selectall}')
-    cy.get('button').contains('Clear nodes').click()
-    cy.get('.tiptap ul').should('not.exist')
-    cy.get('.tiptap p').should('have.length', 4)
+  test('should clear nodes when the button is pressed', async ({ page }) => {
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Control+a')
+    await page.locator('.tiptap').pressSequentially('Hello world')
+    await page.locator('button', { hasText: 'Bullet list' }).click()
+    await expect(page.locator('.tiptap ul')).toBeVisible()
+    await expect(page.locator('.tiptap ul')).toHaveText('Hello world')
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Enter')
+    await page.locator('.tiptap').pressSequentially('A second item')
+    await page.keyboard.press('Enter')
+    await page.locator('.tiptap').pressSequentially('A third item')
+    await page.keyboard.press('Control+a')
+    await page.locator('button', { hasText: 'Clear nodes' }).click()
+    await expect(page.locator('.tiptap ul')).toHaveCount(0)
+    await expect(page.locator('.tiptap p')).toHaveCount(4)
   })
 
   const buttonNodes = [
@@ -69,68 +86,69 @@ context('/src/Examples/Default/Vue/', () => {
   ]
 
   buttonNodes.forEach(n => {
-    it(`should set ${n.label} when the button is pressed`, () => {
-      cy.get('button').contains('Paragraph').click()
-      cy.get('.tiptap').type('{selectall}Hello world{selectall}')
+    test(`should set ${n.label} when the button is pressed`, async ({ page }) => {
+      await page.locator('button', { hasText: 'Paragraph' }).click()
+      await page.locator('.tiptap').click()
+      await page.keyboard.press('Control+a')
+      await page.locator('.tiptap').pressSequentially('Hello world')
+      await page.keyboard.press('Control+a')
 
-      cy.get('button').contains(n.label).click()
-      cy.get(`.tiptap ${n.tag}`).should('exist').should('have.text', 'Hello world')
-      cy.get('button').contains(n.label).click()
-      cy.get(`.tiptap ${n.tag}`).should('not.exist')
+      await page.locator('button', { hasText: n.label }).click()
+      await expect(page.locator(`.tiptap ${n.tag}`)).toBeVisible()
+      await expect(page.locator(`.tiptap ${n.tag}`)).toHaveText('Hello world')
+      await page.locator('button', { hasText: n.label }).click()
+      await expect(page.locator(`.tiptap ${n.tag}`)).toHaveCount(0)
     })
   })
 
-  it('should add a hr when on the same line as a node', () => {
-    cy.get('.tiptap').type('{rightArrow}')
-    cy.get('button').contains('Horizontal rule').click()
-    cy.get('.tiptap hr').should('exist')
-    cy.get('.tiptap h1').should('exist')
+  test('should add a hr when on the same line as a node', async ({ page }) => {
+    await page.keyboard.press('ArrowRight')
+    await page.locator('button', { hasText: 'Horizontal rule' }).click()
+    await expect(page.locator('.tiptap hr')).toBeVisible()
+    await expect(page.locator('.tiptap h1')).toBeVisible()
   })
 
-  it('should add a hr when on a new line', () => {
-    cy.get('.tiptap').type('{rightArrow}{enter}')
-    cy.get('button').contains('Horizontal rule').click()
-    cy.get('.tiptap hr').should('exist')
-    cy.get('.tiptap h1').should('exist')
+  test('should add a hr when on a new line', async ({ page }) => {
+    await page.keyboard.press('ArrowRight')
+    await page.keyboard.press('Enter')
+    await page.locator('button', { hasText: 'Horizontal rule' }).click()
+    await expect(page.locator('.tiptap hr')).toBeVisible()
+    await expect(page.locator('.tiptap h1')).toBeVisible()
   })
 
-  it('should add a br', () => {
-    cy.get('.tiptap').type('{rightArrow}')
-    cy.get('button').contains('Hard break').click()
-    cy.get('.tiptap br').should('exist')
+  test('should add a br', async ({ page }) => {
+    await page.keyboard.press('ArrowRight')
+    await page.locator('button', { hasText: 'Hard break' }).click()
+    await expect(page.locator('.tiptap br')).toBeVisible()
   })
 
-  it('should undo', () => {
-    cy.get('.tiptap')
-      .then(([{ editor }]) => {
-        editor.commands.setContent('<h1>Example Text</h1>')
+  test('should undo', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<h1>Example Text</h1>')
+    })
 
-        cy.get('.tiptap').type('{selectall}{backspace}')
-        return new Promise(resolve => {
-          setTimeout(resolve, 500)
-        })
-      })
-      .then(() => {
-        cy.get('button').contains('Undo').click()
-        cy.get('.tiptap').should('contain', 'Example Text')
-      })
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Control+a')
+    await page.keyboard.press('Backspace')
+    await page.waitForTimeout(500)
+
+    await page.locator('button', { hasText: 'Undo' }).click()
+    await expect(page.locator('.tiptap')).toContainText('Example Text')
   })
 
-  it('should redo', () => {
-    cy.get('.tiptap')
-      .then(([{ editor }]) => {
-        editor.commands.setContent('<h1>Example Text</h1>')
+  test('should redo', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<h1>Example Text</h1>')
+    })
 
-        return new Promise(resolve => {
-          setTimeout(resolve, 500)
-        })
-      })
-      .then(() => {
-        cy.get('.tiptap').type('{selectall}{backspace}')
-        cy.get('button').contains('Undo').click()
-        cy.get('.tiptap').should('contain', 'Example Text')
-        cy.get('button').contains('Redo').click()
-        cy.get('.tiptap').should('not.contain', 'Example Text')
-      })
+    await page.waitForTimeout(500)
+
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Control+a')
+    await page.keyboard.press('Backspace')
+    await page.locator('button', { hasText: 'Undo' }).click()
+    await expect(page.locator('.tiptap')).toContainText('Example Text')
+    await page.locator('button', { hasText: 'Redo' }).click()
+    await expect(page.locator('.tiptap')).not.toContainText('Example Text')
   })
 })

@@ -1,32 +1,42 @@
-context('/src/Examples/Tasks/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/Tasks/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Examples/Tasks/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/Tasks/React/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.clearContent()
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.clearContent()
     })
   })
 
-  it('should always use task items', () => {
-    cy.get('.tiptap input[type="checkbox"]').should('have.length', 1)
+  test('should always use task items', async ({ page }) => {
+    await expect(page.locator('.tiptap input[type="checkbox"]')).toHaveCount(1)
   })
 
-  it('should create new tasks', () => {
-    cy.get('.tiptap').type('Cook food{enter}Eat food{enter}Clean dishes')
-    cy.get('.tiptap input[type="checkbox"]').should('have.length', 3)
+  test('should create new tasks', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('Cook food')
+    await page.keyboard.press('Enter')
+    await page.locator('.tiptap').pressSequentially('Eat food')
+    await page.keyboard.press('Enter')
+    await page.locator('.tiptap').pressSequentially('Clean dishes')
+    await expect(page.locator('.tiptap input[type="checkbox"]')).toHaveCount(3)
   })
 
-  it('should check and uncheck tasks on click', () => {
-    cy.get('.tiptap').type('Cook food{enter}Eat food{enter}Clean dishes')
-    cy.get('.tiptap').find('input[type="checkbox"]').eq(0).click({ force: true })
-    cy.get('.tiptap').find('input[type="checkbox"]:checked').should('have.length', 1)
-    cy.get('.tiptap').find('input[type="checkbox"]').eq(1).click({ force: true })
-    cy.get('.tiptap').find('input[type="checkbox"]:checked').should('have.length', 2)
-    cy.get('.tiptap').find('input[type="checkbox"]').eq(0).click({ force: true })
-    cy.get('.tiptap').find('input[type="checkbox"]:checked').should('have.length', 1)
-    cy.get('.tiptap').find('input[type="checkbox"]').eq(1).click({ force: true })
-    cy.get('.tiptap').find('input[type="checkbox"]:checked').should('have.length', 0)
+  test('should check and uncheck tasks on click', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('Cook food')
+    await page.keyboard.press('Enter')
+    await page.locator('.tiptap').pressSequentially('Eat food')
+    await page.keyboard.press('Enter')
+    await page.locator('.tiptap').pressSequentially('Clean dishes')
+    await page.locator('.tiptap input[type="checkbox"]').nth(0).click({ force: true })
+    await expect(page.locator('.tiptap input[type="checkbox"]:checked')).toHaveCount(1)
+    await page.locator('.tiptap input[type="checkbox"]').nth(1).click({ force: true })
+    await expect(page.locator('.tiptap input[type="checkbox"]:checked')).toHaveCount(2)
+    await page.locator('.tiptap input[type="checkbox"]').nth(0).click({ force: true })
+    await expect(page.locator('.tiptap input[type="checkbox"]:checked')).toHaveCount(1)
+    await page.locator('.tiptap input[type="checkbox"]').nth(1).click({ force: true })
+    await expect(page.locator('.tiptap input[type="checkbox"]:checked')).toHaveCount(0)
   })
 })

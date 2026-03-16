@@ -1,22 +1,22 @@
-context('/src/Examples/Menus/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/Menus/Vue/')
-  })
+import { expect,test } from '@playwright/test'
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.chain().focus().clearContent().run()
+test.describe('/src/Examples/Menus/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/Menus/Vue/')
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.chain().focus().clearContent().run()
     })
   })
 
-  it('should show menu when the editor is empty', () => {
-    cy.get('body').find('.floating-menu')
+  test('should show menu when the editor is empty', async ({ page }) => {
+    await expect(page.locator('body .floating-menu')).toBeVisible()
   })
 
-  it('should show menu when text is selected', () => {
-    cy.get('.tiptap').type('Test').type('{selectall}')
+  test('should show menu when text is selected', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('Test')
+    await page.keyboard.press('Control+a')
 
-    cy.get('body').find('.bubble-menu')
+    await expect(page.locator('body .bubble-menu')).toBeVisible()
   })
 
   const marks = [
@@ -35,12 +35,13 @@ context('/src/Examples/Menus/Vue/', () => {
   ]
 
   marks.forEach(mark => {
-    it(`should apply ${mark.button} correctly`, () => {
-      cy.get('.tiptap').type('Test').type('{selectall}')
+    test(`should apply ${mark.button} correctly`, async ({ page }) => {
+      await page.locator('.tiptap').pressSequentially('Test')
+      await page.keyboard.press('Control+a')
 
-      cy.get('body').find('.bubble-menu').contains(mark.button).click()
+      await page.locator('body .bubble-menu').locator('button', { hasText: mark.button }).click()
 
-      cy.get('.tiptap').find(`p ${mark.tag}`)
+      await expect(page.locator(`.tiptap p ${mark.tag}`)).toBeVisible()
     })
   })
 })

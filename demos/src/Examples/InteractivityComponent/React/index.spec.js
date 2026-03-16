@@ -1,27 +1,27 @@
-context('/src/Examples/InteractivityComponent/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/InteractivityComponent/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Examples/InteractivityComponent/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/InteractivityComponent/React/')
   })
 
-  it('should have a working tiptap instance', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      // eslint-disable-next-line
-      expect(editor).to.not.be.null
-    })
+  test('should have a working tiptap instance', async ({ page }) => {
+    const editor = await page.evaluate(() => document.querySelector('.tiptap').editor)
+    expect(editor).not.toBeNull()
   })
 
-  it('should render a custom node', () => {
-    cy.get('.tiptap .react-component').should('have.length', 1)
+  test('should render a custom node', async ({ page }) => {
+    await expect(page.locator('.tiptap .react-component')).toHaveCount(1)
   })
 
-  it('should handle count click inside custom node', () => {
-    cy.get('.tiptap .react-component button')
-      .should('have.text', 'This button has been clicked 0 times.')
-      .click()
-      .should('have.text', 'This button has been clicked 1 times.')
-      .click()
-      .should('have.text', 'This button has been clicked 2 times.')
-      .click()
-      .should('have.text', 'This button has been clicked 3 times.')
+  test('should handle count click inside custom node', async ({ page }) => {
+    const button = page.locator('.tiptap .react-component button')
+    await expect(button).toHaveText('This button has been clicked 0 times.')
+    await button.click()
+    await expect(button).toHaveText('This button has been clicked 1 times.')
+    await button.click()
+    await expect(button).toHaveText('This button has been clicked 2 times.')
+    await button.click()
+    await expect(button).toHaveText('This button has been clicked 3 times.')
   })
 })

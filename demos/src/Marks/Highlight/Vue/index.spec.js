@@ -1,116 +1,133 @@
-context('/src/Marks/Highlight/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Marks/Highlight/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Marks/Highlight/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Marks/Highlight/Vue/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.chain().setContent('<p>Example Text</p>').selectAll().run()
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.chain().setContent('<p>Example Text</p>').selectAll().run()
     })
   })
 
-  it('the button should highlight the selected text', () => {
-    cy.get('button:first').click()
+  test('the button should highlight the selected text', async ({ page }) => {
+    await page.locator('button').first().click()
 
-    cy.get('.tiptap').find('mark').should('contain', 'Example Text')
+    await expect(page.locator('.tiptap mark')).toContainText('Example Text')
   })
 
-  it('should highlight the text in a specific color', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.toggleHighlight({ color: 'red' })
-
-      cy.get('.tiptap').find('mark').should('contain', 'Example Text').should('have.attr', 'data-color', 'red')
+  test('should highlight the text in a specific color', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.toggleHighlight({ color: 'red' })
     })
+
+    await expect(page.locator('.tiptap mark')).toContainText('Example Text')
+    await expect(page.locator('.tiptap mark')).toHaveAttribute('data-color', 'red')
   })
 
-  it('should update the attributes of existing marks', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor
-        .chain()
+  test('should update the attributes of existing marks', async ({ page }) => {
+    await page.evaluate(() => {
+      document
+        .querySelector('.tiptap')
+        .editor.chain()
         .setContent('<p><mark style="background-color: blue;">Example Text</mark></p>')
         .selectAll()
         .toggleHighlight({ color: 'rgb(255, 0, 0)' })
         .run()
-
-      cy.get('.tiptap').find('mark').should('have.css', 'background-color', 'rgb(255, 0, 0)')
     })
+
+    await expect(page.locator('.tiptap mark')).toHaveCSS('background-color', 'rgb(255, 0, 0)')
   })
 
-  it('should remove existing marks with the same attributes', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor
-        .chain()
+  test('should remove existing marks with the same attributes', async ({ page }) => {
+    await page.evaluate(() => {
+      document
+        .querySelector('.tiptap')
+        .editor.chain()
         .setContent('<p><mark style="background-color: rgb(255, 0, 0);">Example Text</mark></p>')
         .selectAll()
         .toggleHighlight({ color: 'rgb(255, 0, 0)' })
         .run()
-
-      cy.get('.tiptap').find('mark').should('not.exist')
     })
+
+    await expect(page.locator('.tiptap mark')).toHaveCount(0)
   })
 
-  it('is active for mark with any attributes', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.chain().setContent('<p><mark data-color="red">Example Text</mark></p>').selectAll().run()
-
-      expect(editor.isActive('highlight')).to.eq(true)
+  test('is active for mark with any attributes', async ({ page }) => {
+    await page.evaluate(() => {
+      document
+        .querySelector('.tiptap')
+        .editor.chain()
+        .setContent('<p><mark data-color="red">Example Text</mark></p>')
+        .selectAll()
+        .run()
     })
+
+    const isActive = await page.evaluate(() => document.querySelector('.tiptap').editor.isActive('highlight'))
+    expect(isActive).toBe(true)
   })
 
-  it('is active for mark with same attributes', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor
-        .chain()
+  test('is active for mark with same attributes', async ({ page }) => {
+    await page.evaluate(() => {
+      document
+        .querySelector('.tiptap')
+        .editor.chain()
         .setContent('<p><mark style="background-color: rgb(255, 0, 0);">Example Text</mark></p>')
         .selectAll()
         .run()
+    })
 
-      const isActive = editor.isActive('highlight', {
+    const isActive = await page.evaluate(
+      (...args) => document.querySelector('.tiptap').editor.isActive(...args),
+      'highlight',
+      {
         color: 'rgb(255, 0, 0)',
-      })
+      },
+    )
 
-      expect(isActive).to.eq(true)
-    })
+    expect(isActive).toBe(true)
   })
 
-  it('isn’t active for mark with other attributes', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor
-        .chain()
+  test("isn't active for mark with other attributes", async ({ page }) => {
+    await page.evaluate(() => {
+      document
+        .querySelector('.tiptap')
+        .editor.chain()
         .setContent('<p><mark style="background-color: rgb(255, 0, 0);">Example Text</mark></p>')
         .selectAll()
         .run()
-
-      const isActive = editor.isActive('highlight', {
-        color: 'rgb(0, 0, 0)',
-      })
-
-      expect(isActive).to.eq(false)
     })
+
+    const isActive = await page.evaluate(
+      (...args) => document.querySelector('.tiptap').editor.isActive(...args),
+      'highlight',
+      {
+        color: 'rgb(0, 0, 0)',
+      },
+    )
+
+    expect(isActive).toBe(false)
   })
 
-  it('the button should toggle the selected text highlighted', () => {
-    cy.get('button:first').click()
+  test('the button should toggle the selected text highlighted', async ({ page }) => {
+    await page.locator('button').first().click()
 
-    cy.get('.tiptap').type('{selectall}')
+    await page.keyboard.press('Control+a')
 
-    cy.get('button:first').click()
+    await page.locator('button').first().click()
 
-    cy.get('.tiptap').find('mark').should('not.exist')
+    await expect(page.locator('.tiptap mark')).toHaveCount(0)
   })
 
-  it('should highlight the selected text when the keyboard shortcut is pressed', () => {
-    cy.get('.tiptap')
-      .trigger('keydown', { modKey: true, shiftKey: true, key: 'h' })
-      .find('mark')
-      .should('contain', 'Example Text')
+  test('should highlight the selected text when the keyboard shortcut is pressed', async ({ page }) => {
+    await page.keyboard.press('Control+Shift+h')
+    await expect(page.locator('.tiptap mark')).toContainText('Example Text')
   })
 
-  it('should toggle the selected text highlighted when the keyboard shortcut is pressed', () => {
-    cy.get('.tiptap')
-      .trigger('keydown', { modKey: true, shiftKey: true, key: 'h' })
-      .trigger('keydown', { modKey: true, shiftKey: true, key: 'h' })
-      .find('mark')
-      .should('not.exist')
+  test('should toggle the selected text highlighted when the keyboard shortcut is pressed', async ({ page }) => {
+    await page.keyboard.press('Control+Shift+h')
+    await page.keyboard.press('Control+Shift+h')
+    await expect(page.locator('.tiptap mark')).toHaveCount(0)
   })
 })

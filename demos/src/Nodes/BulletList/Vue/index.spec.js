@@ -1,115 +1,130 @@
-context('/src/Nodes/BulletList/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Nodes/BulletList/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Nodes/BulletList/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Nodes/BulletList/Vue/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example Text</p>')
-      cy.get('.tiptap').type('{selectall}')
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p>Example Text</p>')
     })
+    await page.keyboard.press('Control+a')
   })
 
-  it('should parse unordered lists correctly', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<ul><li><p>Example Text</p></li></ul>')
-      expect(editor.getHTML()).to.eq('<ul><li><p>Example Text</p></li></ul>')
+  test('should parse unordered lists correctly', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<ul><li><p>Example Text</p></li></ul>')
     })
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<ul><li><p>Example Text</p></li></ul>',
+    )
   })
 
-  it('should parse unordered lists without paragraphs correctly', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<ul><li>Example Text</li></ul>')
-      expect(editor.getHTML()).to.eq('<ul><li><p>Example Text</p></li></ul>')
+  test('should parse unordered lists without paragraphs correctly', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<ul><li>Example Text</li></ul>')
     })
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<ul><li><p>Example Text</p></li></ul>',
+    )
   })
 
-  it('the button should make the selected line a bullet list item', () => {
-    cy.get('.tiptap ul').should('not.exist')
+  test('the button should make the selected line a bullet list item', async ({ page }) => {
+    await expect(page.locator('.tiptap ul')).toHaveCount(0)
 
-    cy.get('.tiptap ul li').should('not.exist')
+    await expect(page.locator('.tiptap ul li')).toHaveCount(0)
 
-    cy.get('button:nth-child(1)').click()
+    await page.locator('button:nth-child(1)').click()
 
-    cy.get('.tiptap').find('ul').should('contain', 'Example Text')
+    await expect(page.locator('.tiptap ul')).toContainText('Example Text')
 
-    cy.get('.tiptap').find('ul li').should('contain', 'Example Text')
+    await expect(page.locator('.tiptap ul li')).toContainText('Example Text')
   })
 
-  it('the button should toggle the bullet list', () => {
-    cy.get('.tiptap ul').should('not.exist')
+  test('the button should toggle the bullet list', async ({ page }) => {
+    await expect(page.locator('.tiptap ul')).toHaveCount(0)
 
-    cy.get('button:nth-child(1)').click()
+    await page.locator('button:nth-child(1)').click()
 
-    cy.get('.tiptap').find('ul').should('contain', 'Example Text')
+    await expect(page.locator('.tiptap ul')).toContainText('Example Text')
 
-    cy.get('button:nth-child(1)').click()
+    await page.locator('button:nth-child(1)').click()
 
-    cy.get('.tiptap ul').should('not.exist')
+    await expect(page.locator('.tiptap ul')).toHaveCount(0)
   })
 
-  it('should leave the list with double enter', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.clearContent()
-    })
-
-    cy.get('.tiptap').type('- List Item 1{enter}{enter}Paragraph')
-
-    cy.get('.tiptap').find('li').its('length').should('eq', 1)
-
-    cy.get('.tiptap').find('p').should('contain', 'Paragraph')
-  })
-
-  it('should make the paragraph a bullet list keyboard shortcut is pressed', () => {
-    cy.get('.tiptap')
-      .trigger('keydown', { modKey: true, shiftKey: true, key: '8' })
-      .find('ul li')
-      .should('contain', 'Example Text')
-  })
-
-  it('should make a bullet list from an asterisk', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.clearContent()
+  test('should leave the list with double enter', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.clearContent()
     })
 
-    cy.get('.tiptap').type('* List Item 1{enter}List Item 2')
+    await page.locator('.tiptap').pressSequentially('- List Item 1')
+    await page.keyboard.press('Enter')
+    await page.keyboard.press('Enter')
+    await page.locator('.tiptap').pressSequentially('Paragraph')
 
-    cy.get('.tiptap').find('li:nth-child(1)').should('contain', 'List Item 1')
+    await expect(page.locator('.tiptap li')).toHaveCount(1)
 
-    cy.get('.tiptap').find('li:nth-child(2)').should('contain', 'List Item 2')
+    await expect(page.locator('.tiptap p')).toContainText('Paragraph')
   })
 
-  it('should make a bullet list from a dash', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.clearContent()
-    })
-
-    cy.get('.tiptap').type('- List Item 1{enter}List Item 2')
-
-    cy.get('.tiptap').find('li:nth-child(1)').should('contain', 'List Item 1')
-
-    cy.get('.tiptap').find('li:nth-child(2)').should('contain', 'List Item 2')
+  test('should make the paragraph a bullet list keyboard shortcut is pressed', async ({ page }) => {
+    await page.keyboard.press('Control+Shift+8')
+    await expect(page.locator('.tiptap ul li')).toContainText('Example Text')
   })
 
-  it('should make a bullet list from a plus', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.clearContent()
+  test('should make a bullet list from an asterisk', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.clearContent()
     })
 
-    cy.get('.tiptap').type('+ List Item 1{enter}List Item 2')
+    await page.locator('.tiptap').pressSequentially('* List Item 1')
+    await page.keyboard.press('Enter')
+    await page.locator('.tiptap').pressSequentially('List Item 2')
 
-    cy.get('.tiptap').find('li:nth-child(1)').should('contain', 'List Item 1')
+    await expect(page.locator('.tiptap li:nth-child(1)')).toContainText('List Item 1')
 
-    cy.get('.tiptap').find('li:nth-child(2)').should('contain', 'List Item 2')
+    await expect(page.locator('.tiptap li:nth-child(2)')).toContainText('List Item 2')
   })
 
-  it('should remove the bullet list after pressing backspace', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.clearContent()
+  test('should make a bullet list from a dash', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.clearContent()
     })
 
-    cy.get('.tiptap').type('* {backspace}Example')
+    await page.locator('.tiptap').pressSequentially('- List Item 1')
+    await page.keyboard.press('Enter')
+    await page.locator('.tiptap').pressSequentially('List Item 2')
 
-    cy.get('.tiptap').find('p').should('contain', '* Example')
+    await expect(page.locator('.tiptap li:nth-child(1)')).toContainText('List Item 1')
+
+    await expect(page.locator('.tiptap li:nth-child(2)')).toContainText('List Item 2')
+  })
+
+  test('should make a bullet list from a plus', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.clearContent()
+    })
+
+    await page.locator('.tiptap').pressSequentially('+ List Item 1')
+    await page.keyboard.press('Enter')
+    await page.locator('.tiptap').pressSequentially('List Item 2')
+
+    await expect(page.locator('.tiptap li:nth-child(1)')).toContainText('List Item 1')
+
+    await expect(page.locator('.tiptap li:nth-child(2)')).toContainText('List Item 2')
+  })
+
+  test('should remove the bullet list after pressing backspace', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.clearContent()
+    })
+
+    await page.locator('.tiptap').pressSequentially('* ')
+    await page.keyboard.press('Backspace')
+    await page.locator('.tiptap').pressSequentially('Example')
+
+    await expect(page.locator('.tiptap p')).toContainText('* Example')
   })
 })

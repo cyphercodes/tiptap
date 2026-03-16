@@ -1,90 +1,96 @@
-context('/src/Extensions/UndoRedo/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Extensions/UndoRedo/Vue/')
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Mistake</p>')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Extensions/UndoRedo/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Extensions/UndoRedo/Vue/')
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p>Mistake</p>')
     })
   })
 
-  it('should make the last change undone', () => {
-    cy.get('.tiptap').should('contain', 'Mistake')
+  test('should make the last change undone', async ({ page }) => {
+    await expect(page.locator('.tiptap')).toContainText('Mistake')
 
-    cy.get('button:first').should('not.have.attr', 'disabled')
+    await expect(page.locator('button').first()).not.toHaveAttribute('disabled')
 
-    cy.get('button:first').click()
+    await page.locator('button').first().click()
 
-    cy.get('.tiptap').should('not.contain', 'Mistake')
+    await expect(page.locator('.tiptap')).not.toContainText('Mistake')
   })
 
-  it('should make the last change undone with the keyboard shortcut', () => {
-    cy.get('.tiptap').trigger('keydown', { modKey: true, key: 'z' })
+  test('should make the last change undone with the keyboard shortcut', async ({ page }) => {
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Control+z')
 
-    cy.get('.tiptap').should('not.contain', 'Mistake')
+    await expect(page.locator('.tiptap')).not.toContainText('Mistake')
   })
 
-  it('should make the last change undone with the keyboard shortcut (russian)', () => {
-    cy.get('.tiptap').should('contain', 'Mistake')
+  test('should make the last change undone with the keyboard shortcut (russian)', async ({ page }) => {
+    await expect(page.locator('.tiptap')).toContainText('Mistake')
 
-    cy.get('.tiptap').trigger('keydown', { modKey: true, key: 'я' })
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Control+\u044f')
 
-    cy.get('.tiptap').should('not.contain', 'Mistake')
+    await expect(page.locator('.tiptap')).not.toContainText('Mistake')
   })
 
-  it('should apply the last undone change again with the keyboard shortcut', () => {
-    cy.get('.tiptap').trigger('keydown', { modKey: true, key: 'z' })
+  test('should apply the last undone change again with the keyboard shortcut', async ({ page }) => {
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Control+z')
 
-    cy.get('.tiptap').should('not.contain', 'Mistake')
+    await expect(page.locator('.tiptap')).not.toContainText('Mistake')
 
-    cy.get('.tiptap').trigger('keydown', { modKey: true, shiftKey: true, key: 'z' })
+    await page.keyboard.press('Control+Shift+z')
 
-    cy.get('.tiptap').should('contain', 'Mistake')
+    await expect(page.locator('.tiptap')).toContainText('Mistake')
   })
 
-  it('should apply the last undone change again with the keyboard shortcut (russian)', () => {
-    cy.get('.tiptap').trigger('keydown', { modKey: true, key: 'я' })
+  test('should apply the last undone change again with the keyboard shortcut (russian)', async ({ page }) => {
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Control+\u044f')
 
-    cy.get('.tiptap').should('not.contain', 'Mistake')
+    await expect(page.locator('.tiptap')).not.toContainText('Mistake')
 
-    cy.get('.tiptap').trigger('keydown', { modKey: true, shiftKey: true, key: 'я' })
+    await page.keyboard.press('Control+Shift+\u044f')
 
-    cy.get('.tiptap').should('contain', 'Mistake')
+    await expect(page.locator('.tiptap')).toContainText('Mistake')
   })
 
-  it('should apply the last undone change again', () => {
-    cy.get('.tiptap').should('contain', 'Mistake')
+  test('should apply the last undone change again', async ({ page }) => {
+    await expect(page.locator('.tiptap')).toContainText('Mistake')
 
-    cy.get('button:first').should('not.have.attr', 'disabled')
+    await expect(page.locator('button').first()).not.toHaveAttribute('disabled')
 
-    cy.get('button:first').click()
+    await page.locator('button').first().click()
 
-    cy.get('.tiptap').should('not.contain', 'Mistake')
+    await expect(page.locator('.tiptap')).not.toContainText('Mistake')
 
-    cy.get('button:first').should('have.attr', 'disabled')
+    await expect(page.locator('button').first()).toHaveAttribute('disabled')
 
-    cy.get('button:nth-child(2)').click()
+    await page.locator('button:nth-child(2)').click()
 
-    cy.get('.tiptap').should('contain', 'Mistake')
+    await expect(page.locator('.tiptap')).toContainText('Mistake')
   })
 
-  it('should disable undo button when there are no more changes to undo', () => {
-    cy.get('.tiptap').should('contain', 'Mistake')
+  test('should disable undo button when there are no more changes to undo', async ({ page }) => {
+    await expect(page.locator('.tiptap')).toContainText('Mistake')
 
-    cy.get('button:first').should('not.have.attr', 'disabled')
+    await expect(page.locator('button').first()).not.toHaveAttribute('disabled')
 
-    cy.get('button:first').click()
+    await page.locator('button').first().click()
 
-    cy.get('button:first').should('have.attr', 'disabled')
+    await expect(page.locator('button').first()).toHaveAttribute('disabled')
   })
 
-  it('should disable redo button when there are no more changes to redo', () => {
-    cy.get('.tiptap').should('contain', 'Mistake')
+  test('should disable redo button when there are no more changes to redo', async ({ page }) => {
+    await expect(page.locator('.tiptap')).toContainText('Mistake')
 
-    cy.get('button:nth-child(2)').should('have.attr', 'disabled')
+    await expect(page.locator('button:nth-child(2)')).toHaveAttribute('disabled')
 
-    cy.get('button:first').should('not.have.attr', 'disabled')
+    await expect(page.locator('button').first()).not.toHaveAttribute('disabled')
 
-    cy.get('button:first').click()
+    await page.locator('button').first().click()
 
-    cy.get('button:nth-child(2)').should('not.have.attr', 'disabled')
+    await expect(page.locator('button:nth-child(2)')).not.toHaveAttribute('disabled')
   })
 })

@@ -1,29 +1,24 @@
-context('/src/Examples/CodeBlockLanguage/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/CodeBlockLanguage/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Examples/CodeBlockLanguage/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/CodeBlockLanguage/React/')
   })
 
-  it('should have hljs classes for syntax highlighting', () => {
-    cy.get('[class^=hljs]').then(elements => {
-      expect(elements.length).to.be.greaterThan(0)
-    })
+  test('should have hljs classes for syntax highlighting', async ({ page }) => {
+    const count = await page.locator('[class^=hljs]').count()
+    expect(count).toBeGreaterThan(0)
   })
 
-  it('should have different count of hljs classes after switching language', () => {
-    cy.get('[class^=hljs]').then(elements => {
-      const initialCount = elements.length
+  test('should have different count of hljs classes after switching language', async ({ page }) => {
+    const initialCount = await page.locator('[class^=hljs]').count()
+    expect(initialCount).toBeGreaterThan(0)
 
-      expect(initialCount).to.be.greaterThan(0)
+    await page.waitForTimeout(100)
+    await page.locator('.tiptap select').selectOption('java')
+    await page.waitForTimeout(500)
 
-      cy.wait(100)
-      cy.get('.tiptap select').select('java')
-      cy.wait(500)
-
-      cy.get('[class^=hljs]').then(newElements => {
-        const newCount = newElements.length
-
-        expect(newCount).to.not.equal(initialCount)
-      })
-    })
+    const newCount = await page.locator('[class^=hljs]').count()
+    expect(newCount).not.toBe(initialCount)
   })
 })

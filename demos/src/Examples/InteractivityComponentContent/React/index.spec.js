@@ -1,42 +1,48 @@
-context('/src/Examples/InteractivityComponentContent/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/InteractivityComponentContent/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Examples/InteractivityComponentContent/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/InteractivityComponentContent/React/')
   })
 
-  it('should have a working tiptap instance', () => {
-    cy.get('.ProseMirror').then(([{ editor }]) => {
-      // eslint-disable-next-line
-      expect(editor).to.not.be.null
+  test('should have a working tiptap instance', async ({ page }) => {
+    const editor = await page.evaluate(() => document.querySelector('.ProseMirror').editor)
+    expect(editor).not.toBeNull()
+  })
+
+  test('should render a custom node', async ({ page }) => {
+    await expect(page.locator('.ProseMirror .react-component')).toHaveCount(1)
+  })
+
+  test('should allow text editing inside component', async ({ page }) => {
+    const content = page.locator('.ProseMirror .react-component .content div')
+    await content.evaluate(el => {
+      el.setAttribute('contentEditable', 'true')
+      el.textContent = ''
     })
+    await content.pressSequentially('Hello World!')
+    await expect(content).toHaveText('Hello World!')
   })
 
-  it('should render a custom node', () => {
-    cy.get('.ProseMirror .react-component').should('have.length', 1)
+  test('should allow text editing inside component with markdown text', async ({ page }) => {
+    const content = page.locator('.ProseMirror .react-component .content div')
+    await content.evaluate(el => {
+      el.setAttribute('contentEditable', 'true')
+      el.textContent = ''
+    })
+    await content.pressSequentially('Hello World! This is **bold**.')
+    await expect(content).toHaveText('Hello World! This is bold.')
+
+    await expect(page.locator('.ProseMirror .react-component .content strong')).toBeVisible()
   })
 
-  it('should allow text editing inside component', () => {
-    cy.get('.ProseMirror .react-component .content div')
-      .invoke('attr', 'contentEditable', true)
-      .invoke('text', '')
-      .type('Hello World!')
-      .should('have.text', 'Hello World!')
-  })
+  test('should remove node via selectall', async ({ page }) => {
+    await expect(page.locator('.ProseMirror .react-component')).toHaveCount(1)
 
-  it('should allow text editing inside component with markdown text', () => {
-    cy.get('.ProseMirror .react-component .content div')
-      .invoke('attr', 'contentEditable', true)
-      .invoke('text', '')
-      .type('Hello World! This is **bold**.')
-      .should('have.text', 'Hello World! This is bold.')
+    await page.locator('.ProseMirror').click()
+    await page.keyboard.press('Control+a')
+    await page.keyboard.press('Backspace')
 
-    cy.get('.ProseMirror .react-component .content strong').should('exist')
-  })
-
-  it('should remove node via selectall', () => {
-    cy.get('.ProseMirror .react-component').should('have.length', 1)
-
-    cy.get('.ProseMirror').type('{selectall}{backspace}')
-
-    cy.get('.ProseMirror .react-component').should('have.length', 0)
+    await expect(page.locator('.ProseMirror .react-component')).toHaveCount(0)
   })
 })

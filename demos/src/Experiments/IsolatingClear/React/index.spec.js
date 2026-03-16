@@ -1,21 +1,21 @@
-context('/src/Experiments/IsolatingClear/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Experiments/IsolatingClear/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Experiments/IsolatingClear/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Experiments/IsolatingClear/React/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<h1>Example Text</h1>')
-      cy.get('.tiptap').type('{selectall}')
-    })
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<h1>Example Text</h1>')
+    await page.keyboard.press('Control+a')
   })
 
-  it('should apply the paragraph style when the keyboard shortcut is pressed', () => {
-    cy.get('.tiptap h1').should('exist')
+  test('should apply the paragraph style when the keyboard shortcut is pressed', async ({ page }) => {
+    await expect(page.locator('.tiptap h1')).toBeVisible()
 
-    cy.get('.tiptap')
-      .trigger('keydown', { modKey: true, altKey: true, key: '0' })
-      .find('p')
-      .should('contain', 'Example Text')
+    await page.keyboard.press('Control+Alt+0')
+    await expect(page.locator('.tiptap p')).toContainText('Example Text')
   })
 })

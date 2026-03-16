@@ -1,63 +1,79 @@
-context('/src/Examples/MarkdownShortcuts/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/MarkdownShortcuts/Vue/')
-  })
+import { expect,test } from '@playwright/test'
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.clearContent()
+test.describe('/src/Examples/MarkdownShortcuts/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/MarkdownShortcuts/Vue/')
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.clearContent()
     })
   })
 
-  it('should make a h1', () => {
-    cy.get('.tiptap').type('# Headline').find('h1').should('contain', 'Headline')
+  test('should make a h1', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('# Headline')
+    await expect(page.locator('.tiptap h1')).toContainText('Headline')
   })
 
-  it('should make a h2', () => {
-    cy.get('.tiptap').type('## Headline').find('h2').should('contain', 'Headline')
+  test('should make a h2', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('## Headline')
+    await expect(page.locator('.tiptap h2')).toContainText('Headline')
   })
 
-  it('should make a h3', () => {
-    cy.get('.tiptap').type('### Headline').find('h3').should('contain', 'Headline')
+  test('should make a h3', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('### Headline')
+    await expect(page.locator('.tiptap h3')).toContainText('Headline')
   })
 
-  it('should make a h4', () => {
-    cy.get('.tiptap').type('#### Headline').find('h4').should('contain', 'Headline')
+  test('should make a h4', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('#### Headline')
+    await expect(page.locator('.tiptap h4')).toContainText('Headline')
   })
 
-  it('should make a h5', () => {
-    cy.get('.tiptap').type('##### Headline').find('h5').should('contain', 'Headline')
+  test('should make a h5', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('##### Headline')
+    await expect(page.locator('.tiptap h5')).toContainText('Headline')
   })
 
-  it('should make a h6', () => {
-    cy.get('.tiptap').type('###### Headline').find('h6').should('contain', 'Headline')
+  test('should make a h6', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('###### Headline')
+    await expect(page.locator('.tiptap h6')).toContainText('Headline')
   })
 
-  it('should create inline code', () => {
-    cy.get('.tiptap').type('`$foobar`').find('code').should('contain', '$foobar')
+  test('should create inline code', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('`$foobar`')
+    await expect(page.locator('.tiptap code')).toContainText('$foobar')
   })
 
-  it('should create a code block without language', () => {
-    cy.get('.tiptap').type('``` {enter}const foo = bar{enter}```').find('pre').should('contain', 'const foo = bar')
+  test('should create a code block without language', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('``` ')
+    await page.keyboard.press('Enter')
+    await page.locator('.tiptap').pressSequentially('const foo = bar')
+    await page.keyboard.press('Enter')
+    await page.locator('.tiptap').pressSequentially('```')
+    await expect(page.locator('.tiptap pre')).toContainText('const foo = bar')
   })
 
-  it('should create a bullet list from asteriks', () => {
-    cy.get('.tiptap').type('* foobar').find('ul').should('contain', 'foobar')
+  test('should create a bullet list from asteriks', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('* foobar')
+    await expect(page.locator('.tiptap ul')).toContainText('foobar')
   })
 
-  it('should create a bullet list from dashes', () => {
-    cy.get('.tiptap').type('- foobar').find('ul').should('contain', 'foobar')
+  test('should create a bullet list from dashes', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('- foobar')
+    await expect(page.locator('.tiptap ul')).toContainText('foobar')
   })
 
-  it('should create a bullet list from pluses', () => {
-    cy.get('.tiptap').type('+ foobar').find('ul').should('contain', 'foobar')
+  test('should create a bullet list from pluses', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('+ foobar')
+    await expect(page.locator('.tiptap ul')).toContainText('foobar')
   })
 
-  it('should create a ordered list', () => {
-    cy.get('.tiptap').type('1. foobar').find('ol').should('contain', 'foobar')
+  test('should create a ordered list', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('1. foobar')
+    await expect(page.locator('.tiptap ol')).toContainText('foobar')
   })
 
-  it('should create a blockquote', () => {
-    cy.get('.tiptap').type('> foobar').find('blockquote').should('contain', 'foobar')
+  test('should create a blockquote', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('> foobar')
+    await expect(page.locator('.tiptap blockquote')).toContainText('foobar')
   })
 })

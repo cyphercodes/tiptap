@@ -1,25 +1,30 @@
-context('/src/Examples/CustomParagraph/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/CustomParagraph/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Examples/CustomParagraph/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/CustomParagraph/React/')
   })
 
-  it('should have a working tiptap instance', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      // eslint-disable-next-line
-      expect(editor).to.not.be.null
-    })
+  test('should have a working tiptap instance', async ({ page }) => {
+    const editor = await page.evaluate(() => document.querySelector('.tiptap').editor)
+    expect(editor).not.toBeNull()
   })
 
-  it('should have a paragraph and text length', () => {
-    cy.get('.tiptap p')
-      .should('exist')
-      .should('have.text', 'Each line shows the number of characters in the paragraph.')
-    cy.get('.tiptap .label').should('exist').should('have.text', '58')
+  test('should have a paragraph and text length', async ({ page }) => {
+    await expect(page.locator('.tiptap p')).toBeVisible()
+    await expect(page.locator('.tiptap p')).toHaveText('Each line shows the number of characters in the paragraph.')
+    await expect(page.locator('.tiptap .label')).toBeVisible()
+    await expect(page.locator('.tiptap .label')).toHaveText('58')
   })
 
-  it('should have new paragraph', () => {
-    cy.get('.tiptap').type('{selectall}{moveToEnd}{enter}')
-    cy.get('.tiptap p').eq(1).should('exist').should('have.text', '')
-    cy.get('.tiptap .label').eq(1).should('exist').should('have.text', '0')
+  test('should have new paragraph', async ({ page }) => {
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Control+a')
+    await page.keyboard.press('End')
+    await page.keyboard.press('Enter')
+    await expect(page.locator('.tiptap p').nth(1)).toBeVisible()
+    await expect(page.locator('.tiptap p').nth(1)).toHaveText('')
+    await expect(page.locator('.tiptap .label').nth(1)).toBeVisible()
+    await expect(page.locator('.tiptap .label').nth(1)).toHaveText('0')
   })
 })

@@ -1,56 +1,65 @@
-context('/src/Extensions/Color/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Extensions/Color/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Extensions/Color/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Extensions/Color/React/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example Text</p>')
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p>Example Text</p>')
     })
-    cy.get('.tiptap').type('{selectall}')
+    await page.keyboard.press('Control+a')
   })
 
-  it('should set the color of the selected text', () => {
-    cy.get('[data-testid="setPurple"]').should('not.have.class', 'is-active').click().should('have.class', 'is-active')
+  test('should set the color of the selected text', async ({ page }) => {
+    await expect(page.locator('[data-testid="setPurple"]')).not.toHaveClass(/is-active/)
+    await page.locator('[data-testid="setPurple"]').click()
+    await expect(page.locator('[data-testid="setPurple"]')).toHaveClass(/is-active/)
 
-    cy.get('.tiptap').find('span').should('have.attr', 'style', 'color: #958DF1')
+    await expect(page.locator('.tiptap span')).toHaveAttribute('style', 'color: #958DF1')
   })
 
-  it('should remove the color of the selected text', () => {
-    cy.get('[data-testid="setPurple"]').click()
+  test('should remove the color of the selected text', async ({ page }) => {
+    await page.locator('[data-testid="setPurple"]').click()
 
-    cy.get('.tiptap span').should('exist')
+    await expect(page.locator('.tiptap span')).toBeVisible()
 
-    cy.get('[data-testid="unsetColor"]').click()
+    await page.locator('[data-testid="unsetColor"]').click()
 
-    cy.get('.tiptap span').should('not.exist')
+    await expect(page.locator('.tiptap span')).toHaveCount(0)
   })
 
-  it('should change text color with color picker', () => {
-    cy.get('input[type=color]').invoke('val', '#ff0000').trigger('input')
+  test('should change text color with color picker', async ({ page }) => {
+    await page.locator('input[type=color]').evaluate(el => {
+      el.value = '#ff0000'
+      el.dispatchEvent(new Event('input', { bubbles: true }))
+    })
 
-    cy.get('.tiptap').find('span').should('have.attr', 'style', 'color: #ff0000')
+    await expect(page.locator('.tiptap span')).toHaveAttribute('style', 'color: #ff0000')
   })
 
-  it('should match text and color picker color values', () => {
-    cy.get('[data-testid="setPurple"]').click()
+  test('should match text and color picker color values', async ({ page }) => {
+    await page.locator('[data-testid="setPurple"]').click()
 
-    cy.get('input[type=color]').should('have.value', '#958df1')
+    await expect(page.locator('input[type=color]')).toHaveValue('#958df1')
   })
 
-  it('should preserve color on new lines', () => {
-    cy.get('[data-testid="setPurple"]').click()
-    cy.get('.ProseMirror').type('Example Text{enter}')
+  test('should preserve color on new lines', async ({ page }) => {
+    await page.locator('[data-testid="setPurple"]').click()
+    await page.locator('.ProseMirror').pressSequentially('Example Text')
+    await page.keyboard.press('Enter')
 
-    cy.get('[data-testid="setPurple"]').should('have.class', 'is-active')
+    await expect(page.locator('[data-testid="setPurple"]')).toHaveClass(/is-active/)
   })
 
-  it('should unset color on new lines after unset clicked', () => {
-    cy.get('[data-testid="setPurple"]').click()
-    cy.get('.ProseMirror').type('Example Text{enter}')
-    cy.get('[data-testid="unsetColor"]').click()
-    cy.get('.ProseMirror').type('Example Text')
+  test('should unset color on new lines after unset clicked', async ({ page }) => {
+    await page.locator('[data-testid="setPurple"]').click()
+    await page.locator('.ProseMirror').pressSequentially('Example Text')
+    await page.keyboard.press('Enter')
+    await page.locator('[data-testid="unsetColor"]').click()
+    await page.locator('.ProseMirror').pressSequentially('Example Text')
 
-    cy.get('[data-testid="setPurple"]').should('not.have.class', 'is-active')
+    await expect(page.locator('[data-testid="setPurple"]')).not.toHaveClass(/is-active/)
   })
 })

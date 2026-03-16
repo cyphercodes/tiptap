@@ -1,42 +1,48 @@
-context('/src/Examples/InteractivityComponentContent/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/InteractivityComponentContent/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Examples/InteractivityComponentContent/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/InteractivityComponentContent/Vue/')
   })
 
-  it('should have a working tiptap instance', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      // eslint-disable-next-line
-      expect(editor).to.not.be.null
+  test('should have a working tiptap instance', async ({ page }) => {
+    const editor = await page.evaluate(() => document.querySelector('.tiptap').editor)
+    expect(editor).not.toBeNull()
+  })
+
+  test('should render a custom node', async ({ page }) => {
+    await expect(page.locator('.tiptap .vue-component')).toHaveCount(1)
+  })
+
+  test('should allow text editing inside component', async ({ page }) => {
+    const content = page.locator('.tiptap .vue-component .content')
+    await content.evaluate(el => {
+      el.setAttribute('contentEditable', 'true')
+      el.textContent = ''
     })
+    await content.pressSequentially('Hello World!')
+    await expect(content).toHaveText('Hello World!')
   })
 
-  it('should render a custom node', () => {
-    cy.get('.tiptap .vue-component').should('have.length', 1)
+  test('should allow text editing inside component with markdown text', async ({ page }) => {
+    const content = page.locator('.tiptap .vue-component .content')
+    await content.evaluate(el => {
+      el.setAttribute('contentEditable', 'true')
+      el.textContent = ''
+    })
+    await content.pressSequentially('Hello World! This is **bold**.')
+    await expect(content).toHaveText('Hello World! This is bold.')
+
+    await expect(page.locator('.tiptap .vue-component .content strong')).toBeVisible()
   })
 
-  it('should allow text editing inside component', () => {
-    cy.get('.tiptap .vue-component .content')
-      .invoke('attr', 'contentEditable', true)
-      .invoke('text', '')
-      .type('Hello World!')
-      .should('have.text', 'Hello World!')
-  })
+  test('should remove node via selectall', async ({ page }) => {
+    await expect(page.locator('.tiptap .vue-component')).toHaveCount(1)
 
-  it('should allow text editing inside component with markdown text', () => {
-    cy.get('.tiptap .vue-component .content')
-      .invoke('attr', 'contentEditable', true)
-      .invoke('text', '')
-      .type('Hello World! This is **bold**.')
-      .should('have.text', 'Hello World! This is bold.')
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Control+a')
+    await page.keyboard.press('Backspace')
 
-    cy.get('.tiptap .vue-component .content strong').should('exist')
-  })
-
-  it('should remove node via selectall', () => {
-    cy.get('.tiptap .vue-component').should('have.length', 1)
-
-    cy.get('.tiptap').type('{selectall}{backspace}')
-
-    cy.get('.tiptap .vue-component').should('have.length', 0)
+    await expect(page.locator('.tiptap .vue-component')).toHaveCount(0)
   })
 })

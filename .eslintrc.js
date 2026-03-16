@@ -14,10 +14,7 @@ module.exports = {
     },
     {
       files: ['./**/*.ts', './**/*.tsx', './**/*.js', './**/*.jsx', './**/*.vue'],
-      plugins: ['html', 'cypress', '@typescript-eslint', 'simple-import-sort'],
-      env: {
-        'cypress/globals': true,
-      },
+      plugins: ['html', '@typescript-eslint', 'simple-import-sort'],
       globals: {
         document: false,
         window: false,
@@ -93,6 +90,15 @@ module.exports = {
         '@typescript-eslint/consistent-type-imports': ['error', { disallowTypeAnnotations: false }],
         'simple-import-sort/imports': 'error',
         'simple-import-sort/exports': 'error',
+      },
+    },
+    {
+      files: ['./**/*.spec.js', './**/*.spec.ts'],
+      rules: {
+        'no-await-in-loop': 'off',
+        'no-plusplus': 'off',
+        'no-restricted-syntax': 'off',
+        '@typescript-eslint/no-shadow': 'off',
       },
     },
   ],

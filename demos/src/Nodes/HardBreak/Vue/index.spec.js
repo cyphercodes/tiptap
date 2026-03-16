@@ -1,49 +1,51 @@
-context('/src/Nodes/HardBreak/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Nodes/HardBreak/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Nodes/HardBreak/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Nodes/HardBreak/Vue/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example Text</p>')
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p>Example Text</p>')
     })
   })
 
-  it('should parse hard breaks correctly', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example<br>Text</p>')
-      expect(editor.getHTML()).to.eq('<p>Example<br>Text</p>')
+  test('should parse hard breaks correctly', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p>Example<br>Text</p>')
     })
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe('<p>Example<br>Text</p>')
   })
 
-  it('should parse hard breaks with self-closing tag correctly', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example<br />Text</p>')
-      expect(editor.getHTML()).to.eq('<p>Example<br>Text</p>')
+  test('should parse hard breaks with self-closing tag correctly', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p>Example<br />Text</p>')
     })
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe('<p>Example<br>Text</p>')
   })
 
-  it('the button should add a line break', () => {
-    cy.get('.tiptap br').should('not.exist')
+  test('the button should add a line break', async ({ page }) => {
+    await expect(page.locator('.tiptap br')).toHaveCount(0)
 
-    cy.get('button:first').click()
+    await page.locator('button').first().click()
 
-    cy.get('.tiptap br').should('exist')
+    await expect(page.locator('.tiptap br')).toBeVisible()
   })
 
-  it('the default keyboard shortcut should add a line break', () => {
-    cy.get('.tiptap br').should('not.exist')
+  test('the default keyboard shortcut should add a line break', async ({ page }) => {
+    await expect(page.locator('.tiptap br')).toHaveCount(0)
 
-    cy.get('.tiptap').trigger('keydown', { shiftKey: true, key: 'Enter' })
+    await page.keyboard.press('Shift+Enter')
 
-    cy.get('.tiptap br').should('exist')
+    await expect(page.locator('.tiptap br')).toBeVisible()
   })
 
-  it('the alternative keyboard shortcut should add a line break', () => {
-    cy.get('.tiptap br').should('not.exist')
+  test('the alternative keyboard shortcut should add a line break', async ({ page }) => {
+    await expect(page.locator('.tiptap br')).toHaveCount(0)
 
-    cy.get('.tiptap').trigger('keydown', { modKey: true, key: 'Enter' })
+    await page.keyboard.press('Control+Enter')
 
-    cy.get('.tiptap br').should('exist')
+    await expect(page.locator('.tiptap br')).toBeVisible()
   })
 })

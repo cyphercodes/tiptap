@@ -1,75 +1,97 @@
-context('/src/Marks/Bold/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Marks/Bold/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Marks/Bold/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Marks/Bold/Vue/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example Text</p>')
-      cy.get('.tiptap').type('{selectall}')
-    })
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p>Example Text</p>')
+    await page.keyboard.press('Control+a')
   })
 
-  it('should transform b tags to strong tags', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p><b>Example Text</b></p>')
-      expect(editor.getHTML()).to.eq('<p><strong>Example Text</strong></p>')
-    })
+  test('should transform b tags to strong tags', async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p><b>Example Text</b></p>')
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<p><strong>Example Text</strong></p>',
+    )
   })
 
-  it('sould omit b tags with normal font weight inline style', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p><b style="font-weight: normal">Example Text</b></p>')
-      expect(editor.getHTML()).to.eq('<p>Example Text</p>')
-    })
+  test('sould omit b tags with normal font weight inline style', async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p><b style="font-weight: normal">Example Text</b></p>')
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe('<p>Example Text</p>')
   })
 
-  it('should transform any tag with bold inline style to strong tags', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p><span style="font-weight: bold">Example Text</span></p>')
-      expect(editor.getHTML()).to.eq('<p><strong>Example Text</strong></p>')
+  test('should transform any tag with bold inline style to strong tags', async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p><span style="font-weight: bold">Example Text</span></p>')
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<p><strong>Example Text</strong></p>',
+    )
 
-      editor.commands.setContent('<p><span style="font-weight: bolder">Example Text</span></p>')
-      expect(editor.getHTML()).to.eq('<p><strong>Example Text</strong></p>')
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p><span style="font-weight: bolder">Example Text</span></p>')
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<p><strong>Example Text</strong></p>',
+    )
 
-      editor.commands.setContent('<p><span style="font-weight: 500">Example Text</span></p>')
-      expect(editor.getHTML()).to.eq('<p><strong>Example Text</strong></p>')
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p><span style="font-weight: 500">Example Text</span></p>')
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<p><strong>Example Text</strong></p>',
+    )
 
-      editor.commands.setContent('<p><span style="font-weight: 900">Example Text</span></p>')
-      expect(editor.getHTML()).to.eq('<p><strong>Example Text</strong></p>')
-    })
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p><span style="font-weight: 900">Example Text</span></p>')
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<p><strong>Example Text</strong></p>',
+    )
   })
 
-  it('the button should make the selected text bold', () => {
-    cy.get('button:first').click()
+  test('the button should make the selected text bold', async ({ page }) => {
+    await page.locator('button').first().click()
 
-    cy.get('.tiptap').find('strong').should('contain', 'Example Text')
+    await expect(page.locator('.tiptap strong')).toContainText('Example Text')
   })
 
-  it('the button should toggle the selected text bold', () => {
-    cy.get('button:first').click()
-    cy.get('.tiptap').type('{selectall}')
-    cy.get('button:first').click()
-    cy.get('.tiptap strong').should('not.exist')
+  test('the button should toggle the selected text bold', async ({ page }) => {
+    await page.locator('button').first().click()
+    await page.keyboard.press('Control+a')
+    await page.locator('button').first().click()
+    await expect(page.locator('.tiptap strong')).toHaveCount(0)
   })
 
-  it('should make the selected text bold when the keyboard shortcut is pressed', () => {
-    cy.get('.tiptap').trigger('keydown', { modKey: true, key: 'b' }).find('strong').should('contain', 'Example Text')
+  test('should make the selected text bold when the keyboard shortcut is pressed', async ({ page }) => {
+    await page.keyboard.press('Control+b')
+    await expect(page.locator('.tiptap strong')).toContainText('Example Text')
   })
 
-  it('should toggle the selected text bold when the keyboard shortcut is pressed', () => {
-    cy.get('.tiptap').trigger('keydown', { modKey: true, key: 'b' }).find('strong').should('contain', 'Example Text')
+  test('should toggle the selected text bold when the keyboard shortcut is pressed', async ({ page }) => {
+    await page.keyboard.press('Control+b')
+    await expect(page.locator('.tiptap strong')).toContainText('Example Text')
 
-    cy.get('.tiptap').trigger('keydown', { modKey: true, key: 'b' })
+    await page.keyboard.press('Control+b')
 
-    cy.get('.tiptap strong').should('not.exist')
+    await expect(page.locator('.tiptap strong')).toHaveCount(0)
   })
 
-  it('should make a bold text from the default markdown shortcut', () => {
-    cy.get('.tiptap').type('**Bold**').find('strong').should('contain', 'Bold')
+  test('should make a bold text from the default markdown shortcut', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('**Bold**')
+    await expect(page.locator('.tiptap strong')).toContainText('Bold')
   })
 
-  it('should make a bold text from the alternative markdown shortcut', () => {
-    cy.get('.tiptap').type('__Bold__').find('strong').should('contain', 'Bold')
+  test('should make a bold text from the alternative markdown shortcut', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('__Bold__')
+    await expect(page.locator('.tiptap strong')).toContainText('Bold')
   })
 })

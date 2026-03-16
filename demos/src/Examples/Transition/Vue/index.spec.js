@@ -1,33 +1,33 @@
-context('/src/Examples/Transition/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/Transition/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Examples/Transition/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/Transition/Vue/')
   })
 
-  it('should have two buttons and no active tiptap instance', () => {
-    cy.get('.tiptap').should('not.exist')
+  test('should have two buttons and no active tiptap instance', async ({ page }) => {
+    await expect(page.locator('.tiptap')).toHaveCount(0)
 
-    cy.get('#toggle-direct-editor').should('exist')
-    cy.get('#toggle-nested-editor').should('exist')
+    await expect(page.locator('#toggle-direct-editor')).toBeVisible()
+    await expect(page.locator('#toggle-nested-editor')).toBeVisible()
   })
 
-  it('clicking the buttons should show two editors', () => {
-    cy.get('#toggle-direct-editor').click()
-    cy.get('#toggle-nested-editor').click()
+  test('clicking the buttons should show two editors', async ({ page }) => {
+    await page.locator('#toggle-direct-editor').click()
+    await page.locator('#toggle-nested-editor').click()
 
-    cy.get('.tiptap').should('exist')
-    cy.get('.tiptap').should('be.visible')
+    await expect(page.locator('.tiptap')).toBeVisible()
   })
 
-  it('clicking the buttons again should hide the editors', () => {
-    cy.get('#toggle-direct-editor').click()
-    cy.get('#toggle-nested-editor').click()
+  test('clicking the buttons again should hide the editors', async ({ page }) => {
+    await page.locator('#toggle-direct-editor').click()
+    await page.locator('#toggle-nested-editor').click()
 
-    cy.get('.tiptap').should('exist')
-    cy.get('.tiptap').should('be.visible')
+    await expect(page.locator('.tiptap')).toBeVisible()
 
-    cy.get('#toggle-direct-editor').click()
-    cy.get('#toggle-nested-editor').click()
+    await page.locator('#toggle-direct-editor').click()
+    await page.locator('#toggle-nested-editor').click()
 
-    cy.get('.tiptap').should('not.exist')
+    await expect(page.locator('.tiptap')).toHaveCount(0)
   })
 })

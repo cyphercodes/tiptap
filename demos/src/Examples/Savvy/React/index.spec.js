@@ -1,34 +1,38 @@
-context('/src/Examples/Savvy/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/Savvy/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Examples/Savvy/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/Savvy/React/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.clearContent()
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.clearContent()
     })
   })
 
   const tests = [
-    ['(c)', '©'],
-    ['->', '→'],
-    ['>>', '»'],
-    ['1/2', '½'],
-    ['!=', '≠'],
-    ['--', '—'],
-    ['1x1', '1×1'],
-    [':-) ', '🙂'],
-    ['<3 ', '❤️'],
-    ['>:P ', '😜'],
+    ['(c)', '\u00a9'],
+    ['->', '\u2192'],
+    ['>>', '\u00bb'],
+    ['1/2', '\u00bd'],
+    ['!=', '\u2260'],
+    ['--', '\u2014'],
+    ['1x1', '1\u00d71'],
+    [':-) ', '\ud83d\ude42'],
+    ['<3 ', '\u2764\ufe0f'],
+    ['>:P ', '\ud83d\ude1c'],
   ]
 
-  tests.forEach(test => {
-    it(`should parse ${test[0]} correctly`, () => {
-      cy.get('.tiptap').type(`${test[0]} `).should('contain', test[1])
+  for (const [input, expected] of tests) {
+    test(`should parse ${input} correctly`, async ({ page }) => {
+      await page.locator('.tiptap').pressSequentially(`${input} `)
+      await expect(page.locator('.tiptap')).toContainText(expected)
     })
-  })
+  }
 
-  it('should parse hex colors correctly', () => {
-    cy.get('.tiptap').type('#FD9170').find('.color')
+  test('should parse hex colors correctly', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('#FD9170')
+    await expect(page.locator('.tiptap .color')).toBeVisible()
   })
 })

@@ -1,25 +1,29 @@
-context('/src/Extensions/FontSize/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Extensions/FontSize/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Extensions/FontSize/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Extensions/FontSize/Vue/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example Text</p>')
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p>Example Text</p>')
     })
-    cy.get('.tiptap').type('{selectall}')
+    await page.keyboard.press('Control+a')
   })
 
-  it('should set the font-size of the selected text', () => {
-    cy.get('[data-test-id="28px"]').should('not.have.class', 'is-active').click().should('have.class', 'is-active')
+  test('should set the font-size of the selected text', async ({ page }) => {
+    await expect(page.locator('[data-test-id="28px"]')).not.toHaveClass(/is-active/)
+    await page.locator('[data-test-id="28px"]').click()
+    await expect(page.locator('[data-test-id="28px"]')).toHaveClass(/is-active/)
 
-    cy.get('.tiptap').find('span').should('have.attr', 'style', 'font-size: 28px')
+    await expect(page.locator('.tiptap span')).toHaveAttribute('style', 'font-size: 28px')
   })
 
-  it('should remove the font-size of the selected text', () => {
-    cy.get('[data-test-id="28px"]').click()
-    cy.get('.tiptap').find('span').should('have.attr', 'style', 'font-size: 28px')
-    cy.get('[data-test-id="unsetFontSize"]').click()
-    cy.get('.tiptap').get('span').should('not.exist')
+  test('should remove the font-size of the selected text', async ({ page }) => {
+    await page.locator('[data-test-id="28px"]').click()
+    await expect(page.locator('.tiptap span')).toHaveAttribute('style', 'font-size: 28px')
+    await page.locator('[data-test-id="unsetFontSize"]').click()
+    await expect(page.locator('span')).toHaveCount(0)
   })
 })

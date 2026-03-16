@@ -1,132 +1,125 @@
-context('/src/Marks/Link/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Marks/Link/Vue/')
+import { expect,test } from '@playwright/test'
+import { paste } from "tiptap/tests/e2e/helpers.ts"
+
+test.describe('/src/Marks/Link/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Marks/Link/Vue/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example TextDEFAULT</p>')
-      cy.get('.tiptap').type('{selectall}')
-    })
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p>Example TextDEFAULT</p>')
+    await page.keyboard.press('Control+a')
   })
 
-  it('should parse a tags correctly', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p><a href="#">Example Text1</a></p>')
-      expect(editor.getHTML()).to.eq(
-        '<p><a target="_blank" rel="noopener noreferrer nofollow" href="#">Example Text1</a></p>',
-      )
-    })
+  test('should parse a tags correctly', async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p><a href="#">Example Text1</a></p>')
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<p><a target="_blank" rel="noopener noreferrer nofollow" href="#">Example Text1</a></p>',
+    )
   })
 
-  it('should parse a tags with target attribute correctly', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p><a href="#" target="_self">Example Text2</a></p>')
-      expect(editor.getHTML()).to.eq(
-        '<p><a target="_self" rel="noopener noreferrer nofollow" href="#">Example Text2</a></p>',
-      )
-    })
+  test('should parse a tags with target attribute correctly', async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p><a href="#" target="_self">Example Text2</a></p>')
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<p><a target="_self" rel="noopener noreferrer nofollow" href="#">Example Text2</a></p>',
+    )
   })
 
-  it('should parse a tags with rel attribute correctly', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p><a href="#" rel="follow">Example Text3</a></p>')
-      expect(editor.getHTML()).to.eq('<p><a target="_blank" rel="follow" href="#">Example Text3</a></p>')
-    })
+  test('should parse a tags with rel attribute correctly', async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p><a href="#" rel="follow">Example Text3</a></p>')
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<p><a target="_blank" rel="follow" href="#">Example Text3</a></p>',
+    )
   })
 
-  it('the button should add a link to the selected text', () => {
-    cy.window().then(win => {
-      cy.stub(win, 'prompt').returns('https://tiptap.dev')
-
-      cy.get('button:first').click()
-
-      cy.window().its('prompt').should('be.called')
-
-      cy.get('.tiptap')
-        .find('a')
-        .should('contain', 'Example TextDEFAULT')
-        .should('have.attr', 'href', 'https://tiptap.dev')
-    })
-  })
-
-  it('detects a pasted URL within a text', () => {
-    cy.get('.tiptap')
-      .paste({ pastePayload: 'some text https://example1.com around an url', pasteType: 'text/plain' })
-      .find('a')
-      .should('contain', 'https://example1.com')
-      .should('have.attr', 'href', 'https://example1.com')
-  })
-
-  it('detects a pasted URL', () => {
-    cy.get('.tiptap')
-      .type('{backspace}')
-      .paste({ pastePayload: 'https://example2.com', pasteType: 'text/plain' })
-      .find('a')
-      .should('contain', 'https://example2.com')
-      .should('have.attr', 'href', 'https://example2.com')
-  })
-
-  it('should allow exiting the link once set', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p><a href="#" target="_self">Example Text2</a></p>')
-      cy.get('.tiptap').type('{rightArrow}')
-
-      cy.get('button:first').should('not.have.class', 'is-active')
-    })
-  })
-
-  it('detects autolinking', () => {
-    cy.get('.tiptap')
-      .type('https://example.com ')
-      .find('a')
-      .should('contain', 'https://example.com')
-      .should('have.attr', 'href', 'https://example.com')
-  })
-
-  it('detects autolinking with numbers', () => {
-    cy.get('.tiptap')
-      .type('https://tiptap4u.com ')
-      .find('a')
-      .should('contain', 'https://tiptap4u.com')
-      .should('have.attr', 'href', 'https://tiptap4u.com')
-  })
-
-  it('uses the default protocol', () => {
-    cy.get('.tiptap')
-      .type('example.com ')
-      .find('a')
-      .should('contain', 'example.com')
-      .should('have.attr', 'href', 'https://example.com')
-  })
-
-  it('uses a non-default protocol if present', () => {
-    cy.get('.tiptap')
-      .type('http://example.com ')
-      .find('a')
-      .should('contain', 'http://example.com')
-      .should('have.attr', 'href', 'http://example.com')
-  })
-
-  it('detects a pasted URL with query params', () => {
-    cy.get('.tiptap')
-      .type('{backspace}')
-      .paste({ pastePayload: 'https://example.com?paramA=nice&paramB=cool', pasteType: 'text/plain' })
-      .find('a')
-      .should('contain', 'https://example.com?paramA=nice&paramB=cool')
-      .should('have.attr', 'href', 'https://example.com?paramA=nice&paramB=cool')
-  })
-
-  it('correctly detects multiple pasted URLs', () => {
-    cy.get('.tiptap').paste({
-      pastePayload: 'https://example1.com, https://example2.com/foobar, (http://example3.com/foobar)',
-      pasteType: 'text/plain',
+  test('the button should add a link to the selected text', async ({ page }) => {
+    await page.evaluate(() => {
+      window.prompt = () => 'https://tiptap.dev'
     })
 
-    cy.get('.tiptap').find('a[href="https://example1.com"]').should('contain', 'https://example1.com')
+    await page.locator('button').first().click()
 
-    cy.get('.tiptap').find('a[href="https://example2.com/foobar"]').should('contain', 'https://example2.com/foobar')
+    await expect(page.locator('.tiptap a')).toContainText('Example TextDEFAULT')
+    await expect(page.locator('.tiptap a')).toHaveAttribute('href', 'https://tiptap.dev')
+  })
 
-    cy.get('.tiptap').find('a[href="http://example3.com/foobar"]').should('contain', 'http://example3.com/foobar')
+  test('detects a pasted URL within a text', async ({ page }) => {
+    await paste(page, '.tiptap', 'some text https://example1.com around an url', 'text/plain')
+    await expect(page.locator('.tiptap a')).toContainText('https://example1.com')
+    await expect(page.locator('.tiptap a')).toHaveAttribute('href', 'https://example1.com')
+  })
+
+  test('detects a pasted URL', async ({ page }) => {
+    await page.keyboard.press('Backspace')
+    await paste(page, '.tiptap', 'https://example2.com', 'text/plain')
+    await expect(page.locator('.tiptap a')).toContainText('https://example2.com')
+    await expect(page.locator('.tiptap a')).toHaveAttribute('href', 'https://example2.com')
+  })
+
+  test('should allow exiting the link once set', async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p><a href="#" target="_self">Example Text2</a></p>')
+    await page.keyboard.press('ArrowRight')
+
+    await expect(page.locator('button').first()).not.toHaveClass(/is-active/)
+  })
+
+  test('detects autolinking', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('https://example.com ')
+    await expect(page.locator('.tiptap a')).toContainText('https://example.com')
+    await expect(page.locator('.tiptap a')).toHaveAttribute('href', 'https://example.com')
+  })
+
+  test('detects autolinking with numbers', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('https://tiptap4u.com ')
+    await expect(page.locator('.tiptap a')).toContainText('https://tiptap4u.com')
+    await expect(page.locator('.tiptap a')).toHaveAttribute('href', 'https://tiptap4u.com')
+  })
+
+  test('uses the default protocol', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('example.com ')
+    await expect(page.locator('.tiptap a')).toContainText('example.com')
+    await expect(page.locator('.tiptap a')).toHaveAttribute('href', 'https://example.com')
+  })
+
+  test('uses a non-default protocol if present', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('http://example.com ')
+    await expect(page.locator('.tiptap a')).toContainText('http://example.com')
+    await expect(page.locator('.tiptap a')).toHaveAttribute('href', 'http://example.com')
+  })
+
+  test('detects a pasted URL with query params', async ({ page }) => {
+    await page.keyboard.press('Backspace')
+    await paste(page, '.tiptap', 'https://example.com?paramA=nice&paramB=cool', 'text/plain')
+    await expect(page.locator('.tiptap a')).toContainText('https://example.com?paramA=nice&paramB=cool')
+    await expect(page.locator('.tiptap a')).toHaveAttribute('href', 'https://example.com?paramA=nice&paramB=cool')
+  })
+
+  test('correctly detects multiple pasted URLs', async ({ page }) => {
+    await paste(
+      page,
+      '.tiptap',
+      'https://example1.com, https://example2.com/foobar, (http://example3.com/foobar)',
+      'text/plain',
+    )
+
+    await expect(page.locator('.tiptap a[href="https://example1.com"]')).toContainText('https://example1.com')
+
+    await expect(page.locator('.tiptap a[href="https://example2.com/foobar"]')).toContainText(
+      'https://example2.com/foobar',
+    )
+
+    await expect(page.locator('.tiptap a[href="http://example3.com/foobar"]')).toContainText(
+      'http://example3.com/foobar',
+    )
   })
 })

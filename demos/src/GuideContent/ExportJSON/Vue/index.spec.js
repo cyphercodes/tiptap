@@ -1,32 +1,32 @@
-context('/src/GuideContent/ExportJSON/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/GuideContent/ExportJSON/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/GuideContent/ExportJSON/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/GuideContent/ExportJSON/Vue/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example Text</p>')
-    })
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p>Example Text</p>')
   })
 
-  it('should return json', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      const json = editor.getJSON()
+  test('should return json', async ({ page }) => {
+    const json = await page.evaluate(() => document.querySelector('.tiptap').editor.getJSON())
 
-      expect(json).to.deep.equal({
-        type: 'doc',
-        content: [
-          {
-            type: 'paragraph',
-            content: [
-              {
-                type: 'text',
-                text: 'Example Text',
-              },
-            ],
-          },
-        ],
-      })
+    expect(json).toEqual({
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'Example Text',
+            },
+          ],
+        },
+      ],
     })
   })
 })

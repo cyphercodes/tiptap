@@ -1,15 +1,15 @@
-context('/src/Extensions/Mathematics/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Extensions/Mathematics/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Extensions/Mathematics/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Extensions/Mathematics/React/')
   })
 
-  it('should include katex-rendered inline and block nodes', () => {
-    cy.get('.tiptap').then(() => {
-      cy.get('.tiptap span[data-type="inline-math"]').should('have.length', 21)
-      cy.get('.tiptap div[data-type="block-math"]').should('have.length', 1)
+  test('should include katex-rendered inline and block nodes', async ({ page }) => {
+    await expect(page.locator('.tiptap span[data-type="inline-math"]')).toHaveCount(21)
+    await expect(page.locator('.tiptap div[data-type="block-math"]')).toHaveCount(1)
 
-      cy.get('.tiptap span[data-type="inline-math"] .katex').should('have.length', 21)
-      cy.get('.tiptap div[data-type="block-math"] .katex').should('have.length', 1)
-    })
+    await expect(page.locator('.tiptap span[data-type="inline-math"] .katex')).toHaveCount(21)
+    await expect(page.locator('.tiptap div[data-type="block-math"] .katex')).toHaveCount(1)
   })
 })

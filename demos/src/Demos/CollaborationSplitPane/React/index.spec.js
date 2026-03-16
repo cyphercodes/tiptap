@@ -1,24 +1,27 @@
-context('/src/Demos/CollaborationSplitPane/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Demos/CollaborationSplitPane/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Demos/CollaborationSplitPane/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Demos/CollaborationSplitPane/React/')
   })
 
-  it('should have a working tiptap instance', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      // eslint-disable-next-line
-      expect(editor).to.not.be.null
+  test('should have a working tiptap instance', async ({ page }) => {
+    const editorExists = await page.evaluate(() => {
+      const editor = document.querySelector('.tiptap').editor
+      return editor !== null && editor !== undefined
     })
+    expect(editorExists).toBe(true)
   })
 
-  it('should have a ydoc', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
+  test('should have a ydoc', async ({ page }) => {
+    const yDocExists = await page.evaluate(() => {
       /**
        * @type {import('yjs').Doc}
        */
+      const editor = document.querySelector('.tiptap').editor
       const yDoc = editor.extensionManager.extensions.find(a => a.name === 'collaboration').options.document
-
-      // eslint-disable-next-line
-      expect(yDoc).to.not.be.null
+      return yDoc !== null && yDoc !== undefined
     })
+    expect(yDocExists).toBe(true)
   })
 })

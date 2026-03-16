@@ -1,13 +1,15 @@
-context('/src/GuideContent/StaticRenderReact/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/GuideContent/StaticRenderReact/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/GuideContent/StaticRenderReact/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/GuideContent/StaticRenderReact/React/')
   })
 
-  it('should render the content as HTML', () => {
-    cy.get('p').should('exist')
-    cy.get('p').should('contain', 'Example')
+  test('should render the content as HTML', async ({ page }) => {
+    await expect(page.locator('p')).toBeVisible()
+    await expect(page.locator('p')).toContainText('Example')
 
-    cy.get('p strong').should('exist')
-    cy.get('p strong').should('contain', 'Text')
+    await expect(page.locator('p strong')).toBeVisible()
+    await expect(page.locator('p strong')).toContainText('Text')
   })
 })

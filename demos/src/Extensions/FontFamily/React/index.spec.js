@@ -1,52 +1,56 @@
-context('/src/Extensions/FontFamily/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Extensions/FontFamily/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Extensions/FontFamily/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Extensions/FontFamily/React/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example Text</p>')
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p>Example Text</p>')
     })
-    cy.get('.tiptap').type('{selectall}')
+    await page.keyboard.press('Control+a')
   })
 
-  it('should set the font-family of the selected text', () => {
-    cy.get('[data-test-id="monospace"]').should('not.have.class', 'is-active').click().should('have.class', 'is-active')
+  test('should set the font-family of the selected text', async ({ page }) => {
+    await expect(page.locator('[data-test-id="monospace"]')).not.toHaveClass(/is-active/)
+    await page.locator('[data-test-id="monospace"]').click()
+    await expect(page.locator('[data-test-id="monospace"]')).toHaveClass(/is-active/)
 
-    cy.get('.tiptap').find('span').should('have.attr', 'style', 'font-family: monospace')
+    await expect(page.locator('.tiptap span')).toHaveAttribute('style', 'font-family: monospace')
   })
 
-  it('should remove the font-family of the selected text', () => {
-    cy.get('[data-test-id="monospace"]').click()
+  test('should remove the font-family of the selected text', async ({ page }) => {
+    await page.locator('[data-test-id="monospace"]').click()
 
-    cy.get('.tiptap span').should('exist')
+    await expect(page.locator('.tiptap span')).toBeVisible()
 
-    cy.get('[data-test-id="unsetFontFamily"]').click()
+    await page.locator('[data-test-id="unsetFontFamily"]').click()
 
-    cy.get('.tiptap span').should('not.exist')
+    await expect(page.locator('.tiptap span')).toHaveCount(0)
   })
 
-  it('should allow CSS variables as a font-family', () => {
-    cy.get('[data-test-id="css-variable"]')
-      .should('not.have.class', 'is-active')
-      .click()
-      .should('have.class', 'is-active')
+  test('should allow CSS variables as a font-family', async ({ page }) => {
+    await expect(page.locator('[data-test-id="css-variable"]')).not.toHaveClass(/is-active/)
+    await page.locator('[data-test-id="css-variable"]').click()
+    await expect(page.locator('[data-test-id="css-variable"]')).toHaveClass(/is-active/)
 
-    cy.get('.tiptap').find('span').should('have.attr', 'style', 'font-family: var(--title-font-family)')
+    await expect(page.locator('.tiptap span')).toHaveAttribute('style', 'font-family: var(--title-font-family)')
   })
 
-  it('should allow fonts containing multiple font families', () => {
-    cy.get('[data-test-id="comic-sans"]')
-      .should('not.have.class', 'is-active')
-      .click()
-      .should('have.class', 'is-active')
+  test('should allow fonts containing multiple font families', async ({ page }) => {
+    await expect(page.locator('[data-test-id="comic-sans"]')).not.toHaveClass(/is-active/)
+    await page.locator('[data-test-id="comic-sans"]').click()
+    await expect(page.locator('[data-test-id="comic-sans"]')).toHaveClass(/is-active/)
 
-    cy.get('.tiptap').find('span').should('have.attr', 'style', 'font-family: "Comic Sans MS", "Comic Sans"')
+    await expect(page.locator('.tiptap span')).toHaveAttribute('style', 'font-family: "Comic Sans MS", "Comic Sans"')
   })
 
-  it('should allow fonts containing a space and number as a font-family', () => {
-    cy.get('[data-test-id="exo2"]').should('not.have.class', 'is-active').click().should('have.class', 'is-active')
+  test('should allow fonts containing a space and number as a font-family', async ({ page }) => {
+    await expect(page.locator('[data-test-id="exo2"]')).not.toHaveClass(/is-active/)
+    await page.locator('[data-test-id="exo2"]').click()
+    await expect(page.locator('[data-test-id="exo2"]')).toHaveClass(/is-active/)
 
-    cy.get('.tiptap').find('span').should('have.attr', 'style', 'font-family: "Exo 2"')
+    await expect(page.locator('.tiptap span')).toHaveAttribute('style', 'font-family: "Exo 2"')
   })
 })

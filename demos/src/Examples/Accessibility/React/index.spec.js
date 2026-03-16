@@ -1,10 +1,14 @@
-context('/src/Examples/AutolinkValidation/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/AutolinkValidation/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Examples/AutolinkValidation/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/AutolinkValidation/React/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').type('{selectall}{backspace}')
+  test.beforeEach(async ({ page }) => {
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Control+a')
+    await page.keyboard.press('Backspace')
   })
 
   const validLinks = [
@@ -25,56 +29,76 @@ context('/src/Examples/AutolinkValidation/React/', () => {
   ]
 
   validLinks.forEach(([rawTextInput, textThatShouldBeLinked]) => {
-    it(`should autolink ${rawTextInput}`, () => {
-      cy.get('.tiptap').type(rawTextInput)
-      cy.get('.tiptap a').contains(textThatShouldBeLinked)
+    test(`should autolink ${rawTextInput}`, async ({ page }) => {
+      await page.locator('.tiptap').pressSequentially(rawTextInput)
+      await expect(page.locator('.tiptap a')).toContainText(textThatShouldBeLinked)
     })
   })
 
   invalidLinks.forEach(rawTextInput => {
-    it(`should not autolink ${rawTextInput}`, () => {
-      cy.get('.tiptap').type(`{selectall}{backspace}${rawTextInput}`)
-      cy.get('.tiptap a').should('not.exist')
+    test(`should not autolink ${rawTextInput}`, async ({ page }) => {
+      await page.locator('.tiptap').click()
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially(rawTextInput)
+      await expect(page.locator('.tiptap a')).toHaveCount(0)
     })
   })
 
-  it('should not relink unset links after entering second link', () => {
-    cy.get('.tiptap').type('https://tiptap.dev {home}')
-    cy.get('.tiptap').should('have.text', 'https://tiptap.dev ')
-    cy.get('[data-testid=unsetLink]').click()
-    cy.get('.tiptap').find('a').should('have.length', 0)
-    cy.get('.tiptap').type('{end}http://www.example.com/ ')
-    cy.get('.tiptap').find('a').should('have.length', 1).should('have.attr', 'href', 'http://www.example.com/')
+  test('should not relink unset links after entering second link', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('https://tiptap.dev ')
+    await page.keyboard.press('Home')
+    await expect(page.locator('.tiptap')).toHaveText('https://tiptap.dev ')
+    await page.locator('[data-testid=unsetLink]').click()
+    await expect(page.locator('.tiptap a')).toHaveCount(0)
+    await page.keyboard.press('End')
+    await page.locator('.tiptap').pressSequentially('http://www.example.com/ ')
+    await expect(page.locator('.tiptap a')).toHaveCount(1)
+    await expect(page.locator('.tiptap a')).toHaveAttribute('href', 'http://www.example.com/')
   })
 
-  it('should not relink unset links after hitting next paragraph', () => {
-    cy.get('.tiptap').type('https://tiptap.dev {home}')
-    cy.get('.tiptap').should('have.text', 'https://tiptap.dev ')
-    cy.get('[data-testid=unsetLink]').click()
-    cy.get('.tiptap').find('a').should('have.length', 0)
-    cy.get('.tiptap').type('{end}typing other text should prevent the link from relinking when hitting enter{enter}')
-    cy.get('.tiptap').find('a').should('have.length', 0)
+  test('should not relink unset links after hitting next paragraph', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('https://tiptap.dev ')
+    await page.keyboard.press('Home')
+    await expect(page.locator('.tiptap')).toHaveText('https://tiptap.dev ')
+    await page.locator('[data-testid=unsetLink]').click()
+    await expect(page.locator('.tiptap a')).toHaveCount(0)
+    await page.keyboard.press('End')
+    await page
+      .locator('.tiptap')
+      .pressSequentially('typing other text should prevent the link from relinking when hitting enter')
+    await page.keyboard.press('Enter')
+    await expect(page.locator('.tiptap a')).toHaveCount(0)
   })
 
-  it('should not relink unset links after modifying', () => {
-    cy.get('.tiptap').type('https://tiptap.dev {home}')
-    cy.get('.tiptap').should('have.text', 'https://tiptap.dev ')
-    cy.get('[data-testid=unsetLink]').click()
-    cy.get('.tiptap').find('a').should('have.length', 0)
-    cy.get('.tiptap').type('{home}').type('{rightArrow}'.repeat('https://'.length)).type('blah')
-    cy.get('.tiptap').should('have.text', 'https://blahtiptap.dev ')
-    cy.get('.tiptap').find('a').should('have.length', 0)
+  test('should not relink unset links after modifying', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('https://tiptap.dev ')
+    await page.keyboard.press('Home')
+    await expect(page.locator('.tiptap')).toHaveText('https://tiptap.dev ')
+    await page.locator('[data-testid=unsetLink]').click()
+    await expect(page.locator('.tiptap a')).toHaveCount(0)
+    await page.keyboard.press('Home')
+    for (let i = 0; i < 'https://'.length; i++) {
+      await page.keyboard.press('ArrowRight')
+    }
+    await page.locator('.tiptap').pressSequentially('blah')
+    await expect(page.locator('.tiptap')).toHaveText('https://blahtiptap.dev ')
+    await expect(page.locator('.tiptap a')).toHaveCount(0)
   })
 
-  it('should autolink after hitting enter (new paragraph)', () => {
-    cy.get('.tiptap').type('https://tiptap.dev{enter}')
-    cy.get('.tiptap').should('have.text', 'https://tiptap.dev')
-    cy.get('.tiptap').find('a').should('have.length', 1).should('have.attr', 'href', 'https://tiptap.dev')
+  test('should autolink after hitting enter (new paragraph)', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('https://tiptap.dev')
+    await page.keyboard.press('Enter')
+    await expect(page.locator('.tiptap')).toHaveText('https://tiptap.dev')
+    await expect(page.locator('.tiptap a')).toHaveCount(1)
+    await expect(page.locator('.tiptap a')).toHaveAttribute('href', 'https://tiptap.dev')
   })
 
-  it('should autolink after hitting shift-enter (hardbreak)', () => {
-    cy.get('.tiptap').type('https://tiptap.dev{shift+enter}')
-    cy.get('.tiptap').should('have.text', 'https://tiptap.dev')
-    cy.get('.tiptap').find('a').should('have.length', 1).should('have.attr', 'href', 'https://tiptap.dev')
+  test('should autolink after hitting shift-enter (hardbreak)', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('https://tiptap.dev')
+    await page.keyboard.press('Shift+Enter')
+    await expect(page.locator('.tiptap')).toHaveText('https://tiptap.dev')
+    await expect(page.locator('.tiptap a')).toHaveCount(1)
+    await expect(page.locator('.tiptap a')).toHaveAttribute('href', 'https://tiptap.dev')
   })
 })

@@ -1,10 +1,14 @@
-context('/src/Examples/AutolinkValidation/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/AutolinkValidation/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Examples/AutolinkValidation/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/AutolinkValidation/Vue/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').type('{selectall}{backspace}')
+  test.beforeEach(async ({ page }) => {
+    await page.locator('.tiptap').click()
+    await page.keyboard.press('Control+a')
+    await page.keyboard.press('Backspace')
   })
 
   const validLinks = [
@@ -25,16 +29,19 @@ context('/src/Examples/AutolinkValidation/Vue/', () => {
   ]
 
   validLinks.forEach(([rawTextInput, textThatShouldBeLinked]) => {
-    it(`should autolink ${rawTextInput}`, () => {
-      cy.get('.tiptap').type(rawTextInput)
-      cy.get('.tiptap a').contains(textThatShouldBeLinked)
+    test(`should autolink ${rawTextInput}`, async ({ page }) => {
+      await page.locator('.tiptap').pressSequentially(rawTextInput)
+      await expect(page.locator('.tiptap a')).toContainText(textThatShouldBeLinked)
     })
   })
 
   invalidLinks.forEach(rawTextInput => {
-    it(`should not autolink ${rawTextInput}`, () => {
-      cy.get('.tiptap').type(`{selectall}{backspace}${rawTextInput}`)
-      cy.get('.tiptap a').should('not.exist')
+    test(`should not autolink ${rawTextInput}`, async ({ page }) => {
+      await page.locator('.tiptap').click()
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially(rawTextInput)
+      await expect(page.locator('.tiptap a')).toHaveCount(0)
     })
   })
 })

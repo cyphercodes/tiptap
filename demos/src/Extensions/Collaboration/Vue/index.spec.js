@@ -1,24 +1,24 @@
-context('/src/Extensions/Collaboration/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Extensions/Collaboration/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Extensions/Collaboration/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Extensions/Collaboration/Vue/')
   })
 
-  it('should have a working tiptap instance', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      // eslint-disable-next-line
-      expect(editor).to.not.be.null
-    })
+  test('should have a working tiptap instance', async ({ page }) => {
+    const editor = await page.evaluate(() => document.querySelector('.tiptap').editor)
+
+    expect(editor).not.toBeNull()
   })
 
-  it('should have a ydoc', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      /**
-       * @type {import('yjs').Doc}
-       */
+  test('should have a ydoc', async ({ page }) => {
+    const hasYDoc = await page.evaluate(() => {
+      const editor = document.querySelector('.tiptap').editor
       const yDoc = editor.extensionManager.extensions.find(a => a.name === 'collaboration').options.document
 
-      // eslint-disable-next-line
-      expect(yDoc).to.not.be.null
+      return yDoc !== null
     })
+
+    expect(hasYDoc).toBe(true)
   })
 })

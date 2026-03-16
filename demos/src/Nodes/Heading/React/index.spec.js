@@ -1,111 +1,110 @@
-context('/src/Nodes/Heading/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Nodes/Heading/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Nodes/Heading/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Nodes/Heading/React/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example Text</p>')
-      cy.get('.tiptap').type('{selectall}')
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p>Example Text</p>')
     })
+    await page.keyboard.press('Control+a')
   })
 
   const headings = ['<h1>Example Text</h1>', '<h2>Example Text</h2>', '<h3>Example Text</h3>']
 
   headings.forEach(html => {
-    it(`should parse headings correctly (${html})`, () => {
-      cy.get('.tiptap').then(([{ editor }]) => {
-        editor.commands.setContent(html)
-        expect(editor.getHTML()).to.eq(html)
-      })
+    test(`should parse headings correctly (${html})`, async ({ page }) => {
+      await page.evaluate(val => {
+        document.querySelector('.tiptap').editor.commands.setContent(val)
+      }, html)
+      expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(html)
     })
   })
 
-  it('should omit disabled heading levels', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<h4>Example Text</h4>')
-      expect(editor.getHTML()).to.eq('<p>Example Text</p>')
+  test('should omit disabled heading levels', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<h4>Example Text</h4>')
     })
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe('<p>Example Text</p>')
   })
 
-  it('the button should make the selected line a h1', () => {
-    cy.get('.tiptap h1').should('not.exist')
+  test('the button should make the selected line a h1', async ({ page }) => {
+    await expect(page.locator('.tiptap h1')).toHaveCount(0)
 
-    cy.get('button:nth-child(1)').click()
+    await page.locator('button:nth-child(1)').click()
 
-    cy.get('.tiptap').find('h1').should('contain', 'Example Text')
+    await expect(page.locator('.tiptap h1')).toContainText('Example Text')
   })
 
-  it('the button should make the selected line a h2', () => {
-    cy.get('.tiptap h2').should('not.exist')
+  test('the button should make the selected line a h2', async ({ page }) => {
+    await expect(page.locator('.tiptap h2')).toHaveCount(0)
 
-    cy.get('button:nth-child(2)').click()
+    await page.locator('button:nth-child(2)').click()
 
-    cy.get('.tiptap').find('h2').should('contain', 'Example Text')
+    await expect(page.locator('.tiptap h2')).toContainText('Example Text')
   })
 
-  it('the button should make the selected line a h3', () => {
-    cy.get('.tiptap h3').should('not.exist')
+  test('the button should make the selected line a h3', async ({ page }) => {
+    await expect(page.locator('.tiptap h3')).toHaveCount(0)
 
-    cy.get('button:nth-child(3)').click()
+    await page.locator('button:nth-child(3)').click()
 
-    cy.get('.tiptap').find('h3').should('contain', 'Example Text')
+    await expect(page.locator('.tiptap h3')).toContainText('Example Text')
   })
 
-  it('the button should toggle the heading', () => {
-    cy.get('.tiptap h1').should('not.exist')
+  test('the button should toggle the heading', async ({ page }) => {
+    await expect(page.locator('.tiptap h1')).toHaveCount(0)
 
-    cy.get('button:nth-child(1)').click()
+    await page.locator('button:nth-child(1)').click()
 
-    cy.get('.tiptap').find('h1').should('contain', 'Example Text')
+    await expect(page.locator('.tiptap h1')).toContainText('Example Text')
 
-    cy.get('button:nth-child(1)').click()
+    await page.locator('button:nth-child(1)').click()
 
-    cy.get('.tiptap h1').should('not.exist')
+    await expect(page.locator('.tiptap h1')).toHaveCount(0)
   })
 
-  it('should make the paragraph a h1 keyboard shortcut is pressed', () => {
-    cy.get('.tiptap')
-      .trigger('keydown', { modKey: true, altKey: true, key: '1' })
-      .find('h1')
-      .should('contain', 'Example Text')
+  test('should make the paragraph a h1 keyboard shortcut is pressed', async ({ page }) => {
+    await page.keyboard.press('Control+Alt+1')
+    await expect(page.locator('.tiptap h1')).toContainText('Example Text')
   })
 
-  it('should make the paragraph a h2 keyboard shortcut is pressed', () => {
-    cy.get('.tiptap')
-      .trigger('keydown', { modKey: true, altKey: true, key: '2' })
-      .find('h2')
-      .should('contain', 'Example Text')
+  test('should make the paragraph a h2 keyboard shortcut is pressed', async ({ page }) => {
+    await page.keyboard.press('Control+Alt+2')
+    await expect(page.locator('.tiptap h2')).toContainText('Example Text')
   })
 
-  it('should make the paragraph a h3 keyboard shortcut is pressed', () => {
-    cy.get('.tiptap')
-      .trigger('keydown', { modKey: true, altKey: true, key: '3' })
-      .find('h3')
-      .should('contain', 'Example Text')
+  test('should make the paragraph a h3 keyboard shortcut is pressed', async ({ page }) => {
+    await page.keyboard.press('Control+Alt+3')
+    await expect(page.locator('.tiptap h3')).toContainText('Example Text')
   })
 
-  it('should make a h1 from the default markdown shortcut', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.clearContent()
+  test('should make a h1 from the default markdown shortcut', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.clearContent()
     })
 
-    cy.get('.tiptap').type('# Headline').find('h1').should('contain', 'Headline')
+    await page.locator('.tiptap').pressSequentially('# Headline')
+    await expect(page.locator('.tiptap h1')).toContainText('Headline')
   })
 
-  it('should make a h2 from the default markdown shortcut', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.clearContent()
+  test('should make a h2 from the default markdown shortcut', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.clearContent()
     })
 
-    cy.get('.tiptap').type('## Headline').find('h2').should('contain', 'Headline')
+    await page.locator('.tiptap').pressSequentially('## Headline')
+    await expect(page.locator('.tiptap h2')).toContainText('Headline')
   })
 
-  it('should make a h3 from the default markdown shortcut', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.clearContent()
+  test('should make a h3 from the default markdown shortcut', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.clearContent()
     })
 
-    cy.get('.tiptap').type('### Headline').find('h3').should('contain', 'Headline')
+    await page.locator('.tiptap').pressSequentially('### Headline')
+    await expect(page.locator('.tiptap h3')).toContainText('Headline')
   })
 })

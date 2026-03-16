@@ -1,25 +1,25 @@
-/// <reference types="cypress" />
+import { expect,test } from '@playwright/test'
 
-context('/src/Examples/EnterShortcuts/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/EnterShortcuts/React/')
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example Text</p>')
+test.describe('/src/Examples/EnterShortcuts/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/EnterShortcuts/React/')
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p>Example Text</p>')
     })
   })
 
-  it('should update the hint html when the keyboard shortcut is pressed', () => {
-    cy.get('.tiptap').trigger('keydown', { metaKey: true, key: 'Enter' })
-    cy.get('.hint').should('contain', 'Meta-Enter was the last shortcut')
+  test('should update the hint html when the keyboard shortcut is pressed', async ({ page }) => {
+    await page.locator('.tiptap').press('Meta+Enter')
+    await expect(page.locator('.hint')).toContainText('Meta-Enter was the last shortcut')
   })
 
-  it('should update the hint html when the keyboard shortcut is pressed', () => {
-    cy.get('.tiptap').trigger('keydown', { shiftKey: true, key: 'Enter' })
-    cy.get('.hint').should('contain', 'Shift-Enter was the last shortcut')
+  test('should update the hint html when the keyboard shortcut is pressed', async ({ page }) => {
+    await page.locator('.tiptap').press('Shift+Enter')
+    await expect(page.locator('.hint')).toContainText('Shift-Enter was the last shortcut')
   })
 
-  it('should update the hint html when the keyboard shortcut is pressed', () => {
-    cy.get('.tiptap').trigger('keydown', { ctrlKey: true, key: 'Enter' })
-    cy.get('.hint').should('contain', 'Ctrl-Enter was the last shortcut')
+  test('should update the hint html when the keyboard shortcut is pressed', async ({ page }) => {
+    await page.locator('.tiptap').press('Control+Enter')
+    await expect(page.locator('.hint')).toContainText('Ctrl-Enter was the last shortcut')
   })
 })

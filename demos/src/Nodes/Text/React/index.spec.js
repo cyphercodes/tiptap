@@ -1,15 +1,18 @@
-context('/src/Nodes/Text/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Nodes/Text/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Nodes/Text/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Nodes/Text/React/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.clearContent()
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.clearContent()
     })
   })
 
-  it('text should be wrapped in a paragraph by default', () => {
-    cy.get('.tiptap').type('Example Text').find('p').should('contain', 'Example Text')
+  test('text should be wrapped in a paragraph by default', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('Example Text')
+    await expect(page.locator('.tiptap p')).toContainText('Example Text')
   })
 })

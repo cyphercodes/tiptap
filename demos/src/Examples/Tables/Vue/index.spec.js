@@ -1,103 +1,112 @@
-context('/src/Examples/Tables/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/Tables/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Examples/Tables/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/Tables/Vue/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.clearContent()
-      cy.get('button').contains('Insert table').click()
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.clearContent()
     })
+    await page.locator('button', { hasText: 'Insert table' }).click()
   })
 
-  it('adds a table with three columns and three rows', () => {
-    cy.get('.tiptap table').should('exist')
-
-    cy.get('.tiptap table tr').should('exist').should('have.length', 3)
-
-    cy.get('.tiptap table th').should('exist').should('have.length', 3)
-
-    cy.get('.tiptap table td').should('exist').should('have.length', 6)
+  test('adds a table with three columns and three rows', async ({ page }) => {
+    await expect(page.locator('.tiptap table')).toBeVisible()
+    await expect(page.locator('.tiptap table tr')).toHaveCount(3)
+    await expect(page.locator('.tiptap table th')).toHaveCount(3)
+    await expect(page.locator('.tiptap table td')).toHaveCount(6)
   })
 
-  it('adds & delete columns', () => {
-    cy.get('button').contains('Add column before').click()
-    cy.get('.tiptap table th').should('have.length', 4)
+  test('adds & delete columns', async ({ page }) => {
+    await page.locator('button', { hasText: 'Add column before' }).click()
+    await expect(page.locator('.tiptap table th')).toHaveCount(4)
 
-    cy.get('button').contains('Add column after').click()
-    cy.get('.tiptap table th').should('have.length', 5)
+    await page.locator('button', { hasText: 'Add column after' }).click()
+    await expect(page.locator('.tiptap table th')).toHaveCount(5)
 
-    cy.get('button').contains('Delete column').click().click()
-    cy.get('.tiptap table th').should('have.length', 3)
+    await page.locator('button', { hasText: 'Delete column' }).click()
+    await page.locator('button', { hasText: 'Delete column' }).click()
+    await expect(page.locator('.tiptap table th')).toHaveCount(3)
   })
 
-  it('adds & delete rows', () => {
-    cy.get('button').contains('Add row before').click()
-    cy.get('.tiptap table tr').should('have.length', 4)
+  test('adds & delete rows', async ({ page }) => {
+    await page.locator('button', { hasText: 'Add row before' }).click()
+    await expect(page.locator('.tiptap table tr')).toHaveCount(4)
 
-    cy.get('button').contains('Add row after').click()
-    cy.get('.tiptap table tr').should('have.length', 5)
+    await page.locator('button', { hasText: 'Add row after' }).click()
+    await expect(page.locator('.tiptap table tr')).toHaveCount(5)
 
-    cy.get('button').contains('Delete row').click().click()
-    cy.get('.tiptap table tr').should('have.length', 3)
+    await page.locator('button', { hasText: 'Delete row' }).click()
+    await page.locator('button', { hasText: 'Delete row' }).click()
+    await expect(page.locator('.tiptap table tr')).toHaveCount(3)
   })
 
-  it('should delete table', () => {
-    cy.get('button').contains('Delete table').click()
-    cy.get('.tiptap table').should('not.exist')
+  test('should delete table', async ({ page }) => {
+    await page.locator('button', { hasText: 'Delete table' }).click()
+    await expect(page.locator('.tiptap table')).toHaveCount(0)
   })
 
-  it('should merge cells', () => {
-    cy.get('.tiptap').type('{shift}{rightArrow}')
-    cy.get('button').contains('Merge cells').click()
-    cy.get('.tiptap table th').should('have.length', 2)
+  test('should merge cells', async ({ page }) => {
+    await page.keyboard.down('Shift')
+    await page.keyboard.press('ArrowRight')
+    await page.keyboard.up('Shift')
+    await page.locator('button', { hasText: 'Merge cells' }).click()
+    await expect(page.locator('.tiptap table th')).toHaveCount(2)
   })
 
-  it('should split cells', () => {
-    cy.get('.tiptap').type('{shift}{rightArrow}')
-    cy.get('button').contains('Merge cells').click()
-    cy.get('.tiptap table th').should('have.length', 2)
-    cy.get('button').contains('Split cell').click()
-    cy.get('.tiptap table th').should('have.length', 3)
+  test('should split cells', async ({ page }) => {
+    await page.keyboard.down('Shift')
+    await page.keyboard.press('ArrowRight')
+    await page.keyboard.up('Shift')
+    await page.locator('button', { hasText: 'Merge cells' }).click()
+    await expect(page.locator('.tiptap table th')).toHaveCount(2)
+    await page.locator('button', { hasText: 'Split cell' }).click()
+    await expect(page.locator('.tiptap table th')).toHaveCount(3)
   })
 
-  it('should toggle header columns', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.toggleHeaderColumn()
-      cy.get('.tiptap table th').should('have.length', 5)
+  test('should toggle header columns', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.toggleHeaderColumn()
     })
+    await expect(page.locator('.tiptap table th')).toHaveCount(5)
   })
 
-  it('should toggle header row', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.toggleHeaderRow()
-      cy.get('.tiptap table th').should('have.length', 0)
+  test('should toggle header row', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.toggleHeaderRow()
     })
+    await expect(page.locator('.tiptap table th')).toHaveCount(0)
   })
 
-  it('should merge split', () => {
-    cy.get('.tiptap').type('{shift}{rightArrow}')
-    cy.get('button').contains('Merge cells').click()
-    cy.get('.tiptap th[colspan="2"]').should('exist')
-    cy.get('button').contains('Merge or split').click()
-    cy.get('.tiptap th[colspan="2"]').should('not.exist')
+  test('should merge split', async ({ page }) => {
+    await page.keyboard.down('Shift')
+    await page.keyboard.press('ArrowRight')
+    await page.keyboard.up('Shift')
+    await page.locator('button', { hasText: 'Merge cells' }).click()
+    await expect(page.locator('.tiptap th[colspan="2"]')).toBeVisible()
+    await page.locator('button', { hasText: 'Merge or split' }).click()
+    await expect(page.locator('.tiptap th[colspan="2"]')).toHaveCount(0)
   })
 
-  it('should set cell attribute', () => {
-    cy.get('.tiptap').type('{downArrow}')
-    cy.get('button').contains('Set cell attribute').click()
-    cy.get('.tiptap table td[style]').should('have.attr', 'style', 'background-color: #FAF594')
+  test('should set cell attribute', async ({ page }) => {
+    await page.keyboard.press('ArrowDown')
+    await page.locator('button', { hasText: 'Set cell attribute' }).click()
+    await expect(page.locator('.tiptap table td[style]')).toHaveAttribute('style', 'background-color: #FAF594')
   })
 
-  it('should move focus to next or prev cell', () => {
-    cy.get('.tiptap').type('Column 1')
-    cy.get('button').contains('Go to next cell').click()
-    cy.get('.tiptap').type('Column 2')
-    cy.get('button').contains('Go to previous cell').click()
+  test('should move focus to next or prev cell', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('Column 1')
+    await page.locator('button', { hasText: 'Go to next cell' }).click()
+    await page.locator('.tiptap').pressSequentially('Column 2')
+    await page.locator('button', { hasText: 'Go to previous cell' }).click()
 
-    cy.get('.tiptap th').then(elements => {
-      expect(elements[0].innerText).to.equal('Column 1')
-      expect(elements[1].innerText).to.equal('Column 2')
+    const texts = await page.evaluate(() => {
+      const elements = document.querySelectorAll('.tiptap th')
+      return [elements[0].innerText, elements[1].innerText]
     })
+    expect(texts[0]).toBe('Column 1')
+    expect(texts[1]).toBe('Column 2')
   })
 })

@@ -1,70 +1,84 @@
-context('/src/Experiments/CollaborationAnnotation/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Experiments/CollaborationAnnotation/Vue/')
+import { test } from '@playwright/test'
+
+test.describe('/src/Experiments/CollaborationAnnotation/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Experiments/CollaborationAnnotation/Vue/')
   })
 
-  /* it('renders two editors', () => {
-    cy.get('.tiptap').should('have.length', 2)
+  /* test('renders two editors', async ({ page }) => {
+    await expect(page.locator('.tiptap')).toHaveCount(2)
   }) */
 
   // TODO: Fix those tests in the future
   // Current problem is that tiptap seems to mismatch a transformation somewhere inside those tests
   // So to fix this, we should look for a different way to simulate the annotation process
 
-  /* it('sets an annotation in editor 1 and shows annotations in both editors', () => {
-    cy.window().then(win => {
-      cy.stub(win, 'prompt', () => 'This is a test comment')
-      cy.get('.editor-1 .tiptap').type('{selectall}{backspace}Hello world{selectall}')
-      cy.get('button').contains('Comment').eq(0).click()
-      cy.get('.editor-1 .tiptap').type('{end}')
-      cy.get('.tiptap .annotation').should('have.length', 2)
-      cy.get('.comment').should('exist').contains('This is a test comment')
+  /* test('sets an annotation in editor 1 and shows annotations in both editors', async ({ page }) => {
+    page.on('dialog', async dialog => {
+      await dialog.accept('This is a test comment')
     })
+    await page.keyboard.press('Control+a')
+    await page.keyboard.press('Backspace')
+    await page.locator('.editor-1 .tiptap').pressSequentially('Hello world')
+    await page.keyboard.press('Control+a')
+    await page.locator('button', { hasText: 'Comment' }).first().click()
+    await page.keyboard.press('End')
+    await expect(page.locator('.tiptap .annotation')).toHaveCount(2)
+    await expect(page.locator('.comment')).toBeVisible()
+    await expect(page.locator('.comment')).toContainText('This is a test comment')
   }) */
 
-  /* it('updates an existing annotation', () => {
+  /* test('updates an existing annotation', async ({ page }) => {
     let commentIndex = 0
 
-    cy.window().then(win => {
-      cy.stub(win, 'prompt', () => {
-        switch (commentIndex) {
-          case 0:
-            commentIndex += 1
-            return 'This is a test comment'
-
-          case 1:
-            commentIndex += 1
-            return 'This is the new comment'
-
-          default:
-            return ''
-        }
-      })
-
-      cy.get('.editor-1 .tiptap').type('{selectall}{backspace}Hello world{selectall}')
-      cy.get('button').contains('Comment').eq(0).click()
-      cy.wait(1000)
-      cy.get('.editor-1 .tiptap').find('.annotation').click()
-      cy.get('.comment').should('exist').contains('This is a test comment')
-      cy.get('button').contains('Update').click()
-      cy.wait(1000)
-      cy.get('.comment').should('exist').contains('This is the new comment')
+    page.on('dialog', async dialog => {
+      switch (commentIndex) {
+        case 0:
+          commentIndex += 1
+          await dialog.accept('This is a test comment')
+          break
+        case 1:
+          commentIndex += 1
+          await dialog.accept('This is the new comment')
+          break
+        default:
+          await dialog.accept('')
+          break
+      }
     })
+
+    await page.keyboard.press('Control+a')
+    await page.keyboard.press('Backspace')
+    await page.locator('.editor-1 .tiptap').pressSequentially('Hello world')
+    await page.keyboard.press('Control+a')
+    await page.locator('button', { hasText: 'Comment' }).first().click()
+    await page.waitForTimeout(1000)
+    await page.locator('.editor-1 .tiptap .annotation').click()
+    await expect(page.locator('.comment')).toBeVisible()
+    await expect(page.locator('.comment')).toContainText('This is a test comment')
+    await page.locator('button', { hasText: 'Update' }).click()
+    await page.waitForTimeout(1000)
+    await expect(page.locator('.comment')).toBeVisible()
+    await expect(page.locator('.comment')).toContainText('This is the new comment')
   }) */
 
-  /* it('deletes an existing annotation', () => {
-    cy.window().then(win => {
-      cy.stub(win, 'prompt', () => 'This is a test comment')
-
-      cy.get('.editor-1 .tiptap').type('{selectall}{backspace}Hello world{selectall}')
-      cy.get('button').contains('Comment').eq(0).click()
-      cy.wait(1000)
-      cy.get('.editor-1 .tiptap').find('.annotation').click()
-      cy.get('.comment').should('exist').contains('This is a test comment')
-      cy.get('button').contains('Remove').click()
-      cy.get('.tiptap .annotation').should('not.exist')
-      cy.wait(1000)
-      cy.get('.comment').should('not.exist')
+  /* test('deletes an existing annotation', async ({ page }) => {
+    page.on('dialog', async dialog => {
+      await dialog.accept('This is a test comment')
     })
+
+    await page.keyboard.press('Control+a')
+    await page.keyboard.press('Backspace')
+    await page.locator('.editor-1 .tiptap').pressSequentially('Hello world')
+    await page.keyboard.press('Control+a')
+    await page.locator('button', { hasText: 'Comment' }).first().click()
+    await page.waitForTimeout(1000)
+    await page.locator('.editor-1 .tiptap .annotation').click()
+    await expect(page.locator('.comment')).toBeVisible()
+    await expect(page.locator('.comment')).toContainText('This is a test comment')
+    await page.locator('button', { hasText: 'Remove' }).click()
+    await expect(page.locator('.tiptap .annotation')).toHaveCount(0)
+    await page.waitForTimeout(1000)
+    await expect(page.locator('.comment')).toHaveCount(0)
   }) */
 })

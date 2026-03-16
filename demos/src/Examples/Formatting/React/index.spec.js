@@ -1,19 +1,20 @@
-context('/src/Examples/Formatting/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/Formatting/React/')
-  })
+import { expect,test } from '@playwright/test'
 
-  beforeEach(() => {
-    cy.get('.tiptap').type('{selectall}{backspace}')
+test.describe('/src/Examples/Formatting/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/Formatting/React/')
+    await page.keyboard.press('Control+a')
+    await page.keyboard.press('Backspace')
   })
 
   const marks = [{ label: 'Highlight', mark: 'mark' }]
 
   marks.forEach(m => {
-    it(`sets ${m.label}`, () => {
-      cy.get('.tiptap').type('Hello world.{selectall}')
-      cy.get('button').contains(m.label).click()
-      cy.get('.tiptap mark').should('exist')
+    test(`sets ${m.label}`, async ({ page }) => {
+      await page.locator('.tiptap').pressSequentially('Hello world.')
+      await page.keyboard.press('Control+a')
+      await page.locator('button', { hasText: m.label }).click()
+      await expect(page.locator('.tiptap mark')).toBeVisible()
     })
   })
 
@@ -25,11 +26,12 @@ context('/src/Examples/Formatting/React/', () => {
   ]
 
   alignments.forEach(a => {
-    it(`sets ${a.label}`, () => {
-      cy.get('.tiptap').type('Hello world.{selectall}')
-      cy.get('button').contains(a.label).click()
+    test(`sets ${a.label}`, async ({ page }) => {
+      await page.locator('.tiptap').pressSequentially('Hello world.')
+      await page.keyboard.press('Control+a')
+      await page.locator('button', { hasText: a.label }).click()
       if (a.alignment !== 'left') {
-        cy.get('.tiptap p').should('have.css', 'text-align', a.alignment)
+        await expect(page.locator('.tiptap p')).toHaveCSS('text-align', a.alignment)
       }
     })
   })

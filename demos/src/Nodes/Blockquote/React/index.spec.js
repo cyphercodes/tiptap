@@ -1,83 +1,87 @@
-context('/src/Nodes/Blockquote/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Nodes/Blockquote/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Nodes/Blockquote/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Nodes/Blockquote/React/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example Text</p>')
-      cy.get('.tiptap').type('{selectall}')
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p>Example Text</p>')
     })
+    await page.keyboard.press('Control+a')
   })
 
-  it('should parse blockquote tags correctly', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<blockquote><p>Example Text</p></blockquote>')
-      expect(editor.getHTML()).to.eq('<blockquote><p>Example Text</p></blockquote>')
+  test('should parse blockquote tags correctly', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<blockquote><p>Example Text</p></blockquote>')
     })
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<blockquote><p>Example Text</p></blockquote>',
+    )
   })
 
-  it('should parse blockquote tags without paragraphs correctly', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<blockquote>Example Text</blockquote>')
-      expect(editor.getHTML()).to.eq('<blockquote><p>Example Text</p></blockquote>')
+  test('should parse blockquote tags without paragraphs correctly', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<blockquote>Example Text</blockquote>')
     })
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<blockquote><p>Example Text</p></blockquote>',
+    )
   })
 
-  it('the button should make the selected line a blockquote', () => {
-    cy.get('.tiptap blockquote').should('not.exist')
+  test('the button should make the selected line a blockquote', async ({ page }) => {
+    await expect(page.locator('.tiptap blockquote')).toHaveCount(0)
 
-    cy.get('button:first').click()
+    await page.locator('button').first().click()
 
-    cy.get('.tiptap').find('blockquote').should('contain', 'Example Text')
+    await expect(page.locator('.tiptap blockquote')).toContainText('Example Text')
   })
 
-  it('the button should wrap all nodes in one blockquote', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example Text</p><p>Example Text</p>')
-      cy.get('.tiptap').type('{selectall}')
+  test('the button should wrap all nodes in one blockquote', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p>Example Text</p><p>Example Text</p>')
     })
+    await page.keyboard.press('Control+a')
 
-    cy.get('button:first').click()
+    await page.locator('button').first().click()
 
-    cy.get('.tiptap').find('blockquote').should('have.length', 1)
+    await expect(page.locator('.tiptap blockquote')).toHaveCount(1)
   })
 
-  it('the button should toggle the blockquote', () => {
-    cy.get('.tiptap blockquote').should('not.exist')
+  test('the button should toggle the blockquote', async ({ page }) => {
+    await expect(page.locator('.tiptap blockquote')).toHaveCount(0)
 
-    cy.get('button:first').click()
+    await page.locator('button').first().click()
 
-    cy.get('.tiptap').find('blockquote').should('contain', 'Example Text')
+    await expect(page.locator('.tiptap blockquote')).toContainText('Example Text')
 
-    cy.get('.tiptap').type('{selectall}')
+    await page.keyboard.press('Control+a')
 
-    cy.get('button:first').click()
+    await page.locator('button').first().click()
 
-    cy.get('.tiptap blockquote').should('not.exist')
+    await expect(page.locator('.tiptap blockquote')).toHaveCount(0)
   })
 
-  it('should make the selected line a blockquote when the keyboard shortcut is pressed', () => {
-    cy.get('.tiptap')
-      .trigger('keydown', { shiftKey: true, modKey: true, key: 'b' })
-      .find('blockquote')
-      .should('contain', 'Example Text')
+  test('should make the selected line a blockquote when the keyboard shortcut is pressed', async ({ page }) => {
+    await page.keyboard.press('Control+Shift+b')
+    await expect(page.locator('.tiptap blockquote')).toContainText('Example Text')
   })
 
-  it('should toggle the blockquote when the keyboard shortcut is pressed', () => {
-    cy.get('.tiptap blockquote').should('not.exist')
+  test('should toggle the blockquote when the keyboard shortcut is pressed', async ({ page }) => {
+    await expect(page.locator('.tiptap blockquote')).toHaveCount(0)
 
-    cy.get('.tiptap')
-      .trigger('keydown', { shiftKey: true, modKey: true, key: 'b' })
-      .find('blockquote')
-      .should('contain', 'Example Text')
+    await page.keyboard.press('Control+Shift+b')
+    await expect(page.locator('.tiptap blockquote')).toContainText('Example Text')
 
-    cy.get('.tiptap').type('{selectall}').trigger('keydown', { shiftKey: true, modKey: true, key: 'b' })
+    await page.keyboard.press('Control+a')
+    await page.keyboard.press('Control+Shift+b')
 
-    cy.get('.tiptap blockquote').should('not.exist')
+    await expect(page.locator('.tiptap blockquote')).toHaveCount(0)
   })
 
-  it('should make a blockquote from markdown shortcuts', () => {
-    cy.get('.tiptap').type('> Quote').find('blockquote').should('contain', 'Quote')
+  test('should make a blockquote from markdown shortcuts', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('> Quote')
+    await expect(page.locator('.tiptap blockquote')).toContainText('Quote')
   })
 })

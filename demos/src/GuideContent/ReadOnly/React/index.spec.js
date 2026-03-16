@@ -1,33 +1,33 @@
-context('/src/GuideContent/ReadOnly/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/GuideContent/ReadOnly/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/GuideContent/ReadOnly/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/GuideContent/ReadOnly/React/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.clearContent()
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.clearContent()
     })
   })
 
-  it('should be read-only', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.setEditable(false)
-      cy.get('.tiptap').type('Edited: ')
-
-      cy.get('.tiptap p:first').should('not.contain', 'Edited: ')
-
-      cy.get('.tiptap').invoke('attr', 'tabindex').should('not.exist')
+  test('should be read-only', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.setEditable(false)
     })
+    await page.locator('.tiptap').pressSequentially('Edited: ')
+
+    await expect(page.locator('.tiptap p').first()).not.toContainText('Edited: ')
+
+    await expect(page.locator('.tiptap')).not.toHaveAttribute('tabindex')
   })
 
-  it('should be editable', () => {
-    cy.get('#editable').click()
-    cy.get('.tiptap').then(() => {
-      cy.get('.tiptap').type('Edited: ')
+  test('should be editable', async ({ page }) => {
+    await page.locator('#editable').click()
+    await page.locator('.tiptap').pressSequentially('Edited: ')
 
-      cy.get('.tiptap p:first').should('contain', 'Edited: ')
+    await expect(page.locator('.tiptap p').first()).toContainText('Edited: ')
 
-      cy.get('.tiptap').invoke('attr', 'tabindex').should('eq', '0')
-    })
+    await expect(page.locator('.tiptap')).toHaveAttribute('tabindex', '0')
   })
 })

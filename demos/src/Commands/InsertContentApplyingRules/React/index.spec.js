@@ -1,35 +1,59 @@
-context('/src/Commands/InsertContentApplyingRules/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Commands/InsertContentApplyingRules/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Commands/InsertContentApplyingRules/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Commands/InsertContentApplyingRules/React/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.clearContent()
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.clearContent()
     })
   })
 
-  it('should apply list InputRule', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.insertContent('-', {
-        applyInputRules: true,
-      })
+  test('should apply list InputRule', async ({ page }) => {
+    await page.evaluate(
+      val => {
+        document.querySelector('.tiptap').editor.commands.insertContent(val[0], val[1])
+      },
+      [
+        '-',
+        {
+          applyInputRules: true,
+        },
+      ],
+    )
 
-      editor.commands.insertContent(' ', {
-        applyInputRules: true,
-      })
+    await page.evaluate(
+      val => {
+        document.querySelector('.tiptap').editor.commands.insertContent(val[0], val[1])
+      },
+      [
+        ' ',
+        {
+          applyInputRules: true,
+        },
+      ],
+    )
 
-      cy.get('.tiptap').should('contain.html', '<ul><li><p><br class="ProseMirror-trailingBreak"></p></li></ul>')
-    })
+    expect(await page.locator('.tiptap').innerHTML()).toContain(
+      '<ul><li><p><br class="ProseMirror-trailingBreak"></p></li></ul>',
+    )
   })
 
-  it('should apply markdown using a PasteRule', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.insertContentAt(1, '*This is an italic text*', {
-        applyPasteRules: true,
-      })
+  test('should apply markdown using a PasteRule', async ({ page }) => {
+    await page.evaluate(
+      val => {
+        document.querySelector('.tiptap').editor.commands.insertContentAt(1, val[0], val[1])
+      },
+      [
+        '*This is an italic text*',
+        {
+          applyPasteRules: true,
+        },
+      ],
+    )
 
-      cy.get('.tiptap').should('contain.html', '<p><em>This is an italic text</em></p>')
-    })
+    expect(await page.locator('.tiptap').innerHTML()).toContain('<p><em>This is an italic text</em></p>')
   })
 })

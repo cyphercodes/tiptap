@@ -1,9 +1,11 @@
-context('/src/Extensions/Selection/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Extensions/Selection/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Extensions/Selection/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Extensions/Selection/Vue/')
   })
 
-  it('should have class', () => {
-    cy.get('.tiptap span:first').should('have.class', 'selection')
+  test('should have class', async ({ page }) => {
+    await expect(page.locator('.tiptap span').first()).toHaveClass(/selection/)
   })
 })

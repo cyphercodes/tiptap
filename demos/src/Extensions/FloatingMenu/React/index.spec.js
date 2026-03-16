@@ -1,23 +1,23 @@
-context('/src/Extensions/FloatingMenu/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Extensions/FloatingMenu/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Extensions/FloatingMenu/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Extensions/FloatingMenu/React/')
   })
 
-  it('should not render a floating menu on non-empty nodes', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.chain().setContent('<p>Example Text</p>').focus().run()
-      const floatingMenu = cy.get('[data-testID="floating-menu"]')
-
-      floatingMenu.should('not.exist')
+  test('should not render a floating menu on non-empty nodes', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.chain().setContent('<p>Example Text</p>').focus().run()
     })
+
+    await expect(page.locator('[data-testID="floating-menu"]')).toHaveCount(0)
   })
 
-  it('should render a floating menu on empty nodes', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.chain().setContent('<p></p>').focus().run()
-      const floatingMenu = cy.get('[data-testID="floating-menu"]')
-
-      floatingMenu.should('exist')
+  test('should render a floating menu on empty nodes', async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.chain().setContent('<p></p>').focus().run()
     })
+
+    await expect(page.locator('[data-testID="floating-menu"]')).toBeVisible()
   })
 })

@@ -1,39 +1,49 @@
-context('/src/Experiments/Commands/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Experiments/Commands/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Experiments/Commands/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Experiments/Commands/Vue/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.clearContent()
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.clearContent()
     })
   })
 
-  it('should open a popup after typing a slash', () => {
+  test('should open a popup after typing a slash', async ({ page }) => {
     const items = [{ tag: 'h1' }, { tag: 'h2' }, { tag: 'strong' }, { tag: 'em' }]
 
-    items.forEach((item, i) => {
-      cy.get('.tiptap').type('{selectall}{backspace}/')
-      cy.get('.dropdown-menu').should('exist')
-      cy.get('.dropdown-menu button').eq(i).click()
-      cy.get('.tiptap').type(`I am a ${item.tag}`)
-      cy.get(`.tiptap ${item.tag}`).should('exist').should('have.text', `I am a ${item.tag}`)
-    })
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      await page.keyboard.press('Control+a')
+      await page.keyboard.press('Backspace')
+      await page.locator('.tiptap').pressSequentially('/')
+      await expect(page.locator('.dropdown-menu')).toBeVisible()
+      await page.locator('.dropdown-menu button').nth(i).click()
+      await page.locator('.tiptap').pressSequentially(`I am a ${item.tag}`)
+      await expect(page.locator(`.tiptap ${item.tag}`)).toBeVisible()
+      await expect(page.locator(`.tiptap ${item.tag}`)).toHaveText(`I am a ${item.tag}`)
+    }
   })
 
-  it('should close the popup without any command via esc', () => {
-    cy.get('.tiptap').type('{selectall}{backspace}/')
-    cy.get('.dropdown-menu').should('exist')
-    cy.get('.tiptap').type('{esc}')
-    cy.get('.dropdown-menu').should('not.exist')
+  test('should close the popup without any command via esc', async ({ page }) => {
+    await page.keyboard.press('Control+a')
+    await page.keyboard.press('Backspace')
+    await page.locator('.tiptap').pressSequentially('/')
+    await expect(page.locator('.dropdown-menu')).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.locator('.dropdown-menu')).toHaveCount(0)
   })
 
-  it('should open the popup when the cursor is after a slash', () => {
-    cy.get('.tiptap').type('{selectall}{backspace}/')
-    cy.get('.dropdown-menu').should('exist')
-    cy.get('.tiptap').type('{leftArrow}')
-    cy.get('.dropdown-menu').should('not.exist')
-    cy.get('.tiptap').type('{rightArrow}')
-    cy.get('.dropdown-menu').should('exist')
+  test('should open the popup when the cursor is after a slash', async ({ page }) => {
+    await page.keyboard.press('Control+a')
+    await page.keyboard.press('Backspace')
+    await page.locator('.tiptap').pressSequentially('/')
+    await expect(page.locator('.dropdown-menu')).toBeVisible()
+    await page.keyboard.press('ArrowLeft')
+    await expect(page.locator('.dropdown-menu')).toHaveCount(0)
+    await page.keyboard.press('ArrowRight')
+    await expect(page.locator('.dropdown-menu')).toBeVisible()
   })
 })

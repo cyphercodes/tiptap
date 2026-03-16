@@ -1,11 +1,15 @@
-context('/src/GuideContent/GenerateHTML/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/GuideContent/GenerateHTML/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/GuideContent/GenerateHTML/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/GuideContent/GenerateHTML/Vue/')
   })
 
-  it('should render the content as an HTML string', () => {
-    cy.get('pre code').should('exist')
+  test('should render the content as an HTML string', async ({ page }) => {
+    await expect(page.locator('pre code')).toBeVisible()
 
-    cy.get('pre code').should('contain', '<p xmlns="http://www.w3.org/1999/xhtml">Example <strong>Text</strong></p>')
+    await expect(page.locator('pre code')).toContainText(
+      '<p xmlns="http://www.w3.org/1999/xhtml">Example <strong>Text</strong></p>',
+    )
   })
 })

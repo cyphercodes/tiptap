@@ -1,38 +1,37 @@
-context('/src/Examples/Drawing/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/Drawing/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Examples/Drawing/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/Drawing/Vue/')
   })
 
-  it('should have a working tiptap instance', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      // eslint-disable-next-line
-      expect(editor).to.not.be.null
-    })
+  test('should have a working tiptap instance', async ({ page }) => {
+    const editor = await page.evaluate(() => document.querySelector('.tiptap').editor)
+    expect(editor).not.toBeNull()
   })
 
-  it('should have a svg canvas', () => {
-    cy.get('.tiptap svg').should('exist')
+  test('should have a svg canvas', async ({ page }) => {
+    await expect(page.locator('.tiptap svg')).toBeVisible()
   })
 
-  it('should draw on the svg canvas', () => {
-    cy.get('.tiptap svg').should('exist')
+  test('should draw on the svg canvas', async ({ page }) => {
+    await expect(page.locator('.tiptap svg')).toBeVisible()
 
-    cy.wait(500)
+    await page.waitForTimeout(500)
 
-    cy.get('input').then(inputs => {
-      const color = inputs[0].value
-      const size = inputs[1].value
+    const color = await page.locator('input').first().inputValue()
+    const size = await page.locator('input').nth(1).inputValue()
 
-      cy.get('.tiptap svg')
-        .click()
-        .trigger('mousedown', { pageX: 100, pageY: 100, which: 1 })
-        .trigger('mousemove', { pageX: 200, pageY: 200, which: 1 })
-        .trigger('mouseup')
+    const svg = page.locator('.tiptap svg')
+    await svg.click()
+    const box = await svg.boundingBox()
+    await page.mouse.move(box.x + 100, box.y + 100)
+    await page.mouse.down()
+    await page.mouse.move(box.x + 200, box.y + 200)
+    await page.mouse.up()
 
-      cy.get('.tiptap svg path')
-        .should('exist')
-        .should('have.attr', 'stroke-width', size)
-        .should('have.attr', 'stroke', color.toUpperCase())
-    })
+    await expect(page.locator('.tiptap svg path')).toBeVisible()
+    await expect(page.locator('.tiptap svg path')).toHaveAttribute('stroke-width', size)
+    await expect(page.locator('.tiptap svg path')).toHaveAttribute('stroke', color.toUpperCase())
   })
 })

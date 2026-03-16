@@ -1,19 +1,19 @@
-context('/src/GuideContent/ExportHTML/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/GuideContent/ExportHTML/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/GuideContent/ExportHTML/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/GuideContent/ExportHTML/Vue/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example Text</p>')
-    })
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p>Example Text</p>')
   })
 
-  it('should return html', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      const html = editor.getHTML()
+  test('should return html', async ({ page }) => {
+    const html = await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())
 
-      expect(html).to.equal('<p>Example Text</p>')
-    })
+    expect(html).toBe('<p>Example Text</p>')
   })
 })

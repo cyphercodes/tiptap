@@ -1,38 +1,43 @@
-context('/src/Extensions/LineHeight/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Extensions/LineHeight/Vue/')
-  })
+import { expect,test } from '@playwright/test'
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example Text</p>')
+test.describe('/src/Extensions/LineHeight/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Extensions/LineHeight/Vue/')
+    await page.evaluate(() => {
+      document.querySelector('.tiptap').editor.commands.setContent('<p>Example Text</p>')
     })
-    cy.get('.tiptap').type('{selectall}')
+    await page.keyboard.press('Control+a')
   })
 
-  it('should set line-height 1.5 for the selected text', () => {
-    cy.get('[data-test-id="1.5"]').should('not.have.class', 'is-active').click().should('have.class', 'is-active')
+  test('should set line-height 1.5 for the selected text', async ({ page }) => {
+    await expect(page.locator('[data-test-id="1.5"]')).not.toHaveClass(/is-active/)
+    await page.locator('[data-test-id="1.5"]').click()
+    await expect(page.locator('[data-test-id="1.5"]')).toHaveClass(/is-active/)
 
-    cy.get('.tiptap').find('span').should('have.attr', 'style', 'line-height: 1.5')
+    await expect(page.locator('.tiptap span')).toHaveAttribute('style', 'line-height: 1.5')
   })
 
-  it('should set line-height 2.0 for the selected text', () => {
-    cy.get('[data-test-id="2.0"]').should('not.have.class', 'is-active').click().should('have.class', 'is-active')
+  test('should set line-height 2.0 for the selected text', async ({ page }) => {
+    await expect(page.locator('[data-test-id="2.0"]')).not.toHaveClass(/is-active/)
+    await page.locator('[data-test-id="2.0"]').click()
+    await expect(page.locator('[data-test-id="2.0"]')).toHaveClass(/is-active/)
 
-    cy.get('.tiptap').find('span').should('have.attr', 'style', 'line-height: 2.0')
+    await expect(page.locator('.tiptap span')).toHaveAttribute('style', 'line-height: 2.0')
   })
 
-  it('should set line-height 4.0 for the selected text', () => {
-    cy.get('[data-test-id="4.0"]').should('not.have.class', 'is-active').click().should('have.class', 'is-active')
+  test('should set line-height 4.0 for the selected text', async ({ page }) => {
+    await expect(page.locator('[data-test-id="4.0"]')).not.toHaveClass(/is-active/)
+    await page.locator('[data-test-id="4.0"]').click()
+    await expect(page.locator('[data-test-id="4.0"]')).toHaveClass(/is-active/)
 
-    cy.get('.tiptap').find('span').should('have.attr', 'style', 'line-height: 4.0')
+    await expect(page.locator('.tiptap span')).toHaveAttribute('style', 'line-height: 4.0')
   })
 
-  it('should remove the line-height of the selected text', () => {
-    cy.get('[data-test-id="1.5"]').click()
-    cy.get('.tiptap').find('span').should('have.attr', 'style', 'line-height: 1.5')
+  test('should remove the line-height of the selected text', async ({ page }) => {
+    await page.locator('[data-test-id="1.5"]').click()
+    await expect(page.locator('.tiptap span')).toHaveAttribute('style', 'line-height: 1.5')
 
-    cy.get('[data-test-id="unsetLineHeight"]').click()
-    cy.get('.tiptap span').should('not.exist')
+    await page.locator('[data-test-id="unsetLineHeight"]').click()
+    await expect(page.locator('.tiptap span')).toHaveCount(0)
   })
 })

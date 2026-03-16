@@ -1,75 +1,82 @@
-context('/src/Marks/Strike/React/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Marks/Strike/React/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Marks/Strike/React/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Marks/Strike/React/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p>Example Text</p>')
-      cy.get('.tiptap').type('{selectall}')
-    })
+  test.beforeEach(async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p>Example Text</p>')
+    await page.keyboard.press('Control+a')
   })
 
-  it('should parse s tags correctly', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p><s>Example Text</s></p>')
-      expect(editor.getHTML()).to.eq('<p><s>Example Text</s></p>')
-    })
+  test('should parse s tags correctly', async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p><s>Example Text</s></p>')
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<p><s>Example Text</s></p>',
+    )
   })
 
-  it('should transform del tags to s tags', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p><del>Example Text</del></p>')
-      expect(editor.getHTML()).to.eq('<p><s>Example Text</s></p>')
-    })
+  test('should transform del tags to s tags', async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p><del>Example Text</del></p>')
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<p><s>Example Text</s></p>',
+    )
   })
 
-  it('should transform strike tags to s tags', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p><strike>Example Text</strike></p>')
-      expect(editor.getHTML()).to.eq('<p><s>Example Text</s></p>')
-    })
+  test('should transform strike tags to s tags', async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p><strike>Example Text</strike></p>')
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<p><s>Example Text</s></p>',
+    )
   })
 
-  it('should transform any tag with text decoration line through to s tags', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      editor.commands.setContent('<p><span style="text-decoration: line-through">Example Text</span></p>')
-      expect(editor.getHTML()).to.eq('<p><s>Example Text</s></p>')
-    })
+  test('should transform any tag with text decoration line through to s tags', async ({ page }) => {
+    await page.evaluate(val => {
+      document.querySelector('.tiptap').editor.commands.setContent(val)
+    }, '<p><span style="text-decoration: line-through">Example Text</span></p>')
+    expect(await page.evaluate(() => document.querySelector('.tiptap').editor.getHTML())).toBe(
+      '<p><s>Example Text</s></p>',
+    )
   })
 
-  it('the button should strike the selected text', () => {
-    cy.get('button:first').click()
+  test('the button should strike the selected text', async ({ page }) => {
+    await page.locator('button').first().click()
 
-    cy.get('.tiptap').find('s').should('contain', 'Example Text')
+    await expect(page.locator('.tiptap s')).toContainText('Example Text')
   })
 
-  it('the button should toggle the selected text striked', () => {
-    cy.get('button:first').click()
+  test('the button should toggle the selected text striked', async ({ page }) => {
+    await page.locator('button').first().click()
 
-    cy.get('.tiptap').type('{selectall}')
+    await page.keyboard.press('Control+a')
 
-    cy.get('button:first').click()
+    await page.locator('button').first().click()
 
-    cy.get('.tiptap').find('s').should('not.exist')
+    await expect(page.locator('.tiptap s')).toHaveCount(0)
   })
 
-  it('should strike the selected text when the keyboard shortcut is pressed', () => {
-    cy.get('.tiptap')
-      .trigger('keydown', { modKey: true, shiftKey: true, key: 's' })
-      .find('s')
-      .should('contain', 'Example Text')
+  test('should strike the selected text when the keyboard shortcut is pressed', async ({ page }) => {
+    await page.keyboard.press('Control+Shift+s')
+    await expect(page.locator('.tiptap s')).toContainText('Example Text')
   })
 
-  it('should toggle the selected text striked when the keyboard shortcut is pressed', () => {
-    cy.get('.tiptap')
-      .trigger('keydown', { modKey: true, shiftKey: true, key: 's' })
-      .trigger('keydown', { modKey: true, shiftKey: true, key: 's' })
-      .find('s')
-      .should('not.exist')
+  test('should toggle the selected text striked when the keyboard shortcut is pressed', async ({ page }) => {
+    await page.keyboard.press('Control+Shift+s')
+    await page.keyboard.press('Control+Shift+s')
+    await expect(page.locator('.tiptap s')).toHaveCount(0)
   })
 
-  it('should make a striked text from the markdown shortcut', () => {
-    cy.get('.tiptap').type('~~Strike~~').find('s').should('contain', 'Strike')
+  test('should make a striked text from the markdown shortcut', async ({ page }) => {
+    await page.locator('.tiptap').pressSequentially('~~Strike~~')
+    await expect(page.locator('.tiptap s')).toContainText('Strike')
   })
 })

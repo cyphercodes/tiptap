@@ -1,14 +1,14 @@
-context('/src/GuideContent/GenerateJSON/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/GuideContent/GenerateJSON/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/GuideContent/GenerateJSON/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/GuideContent/GenerateJSON/Vue/')
   })
 
-  it('should render the content as an HTML string', () => {
-    cy.get('pre code').should('exist')
+  test('should render the content as an HTML string', async ({ page }) => {
+    await expect(page.locator('pre code')).toBeVisible()
 
-    cy.get('pre code').should(
-      'contain',
-      `{
+    await expect(page.locator('pre code')).toContainText(`{
   "type": "doc",
   "content": [
     {
@@ -30,7 +30,6 @@ context('/src/GuideContent/GenerateJSON/Vue/', () => {
       ]
     }
   ]
-}`,
-    )
+}`)
   })
 })

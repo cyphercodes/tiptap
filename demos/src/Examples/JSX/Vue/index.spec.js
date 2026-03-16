@@ -1,16 +1,16 @@
-context('/src/Examples/JSX/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/JSX/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Examples/JSX/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/JSX/Vue/')
   })
 
-  it('should have a working tiptap instance', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      // eslint-disable-next-line
-      expect(editor).to.not.be.null
-    })
+  test('should have a working tiptap instance', async ({ page }) => {
+    const editor = await page.evaluate(() => document.querySelector('.tiptap').editor)
+    expect(editor).not.toBeNull()
   })
 
-  it('should have paragraphs colored as red', () => {
-    cy.get('.tiptap p').should('have.css', 'color', 'rgb(255, 0, 0)')
+  test('should have paragraphs colored as red', async ({ page }) => {
+    await expect(page.locator('.tiptap p')).toHaveCSS('color', 'rgb(255, 0, 0)')
   })
 })

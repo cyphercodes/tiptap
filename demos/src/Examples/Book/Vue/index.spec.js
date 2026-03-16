@@ -1,12 +1,12 @@
-context('/src/Examples/Book/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Examples/Book/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Examples/Book/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Examples/Book/Vue/')
   })
 
-  it('should have a working tiptap instance', () => {
-    cy.get('.tiptap').then(([{ editor }]) => {
-      // eslint-disable-next-line
-      expect(editor).to.not.be.null
-    })
+  test('should have a working tiptap instance', async ({ page }) => {
+    const editor = await page.evaluate(() => document.querySelector('.tiptap').editor)
+    expect(editor).not.toBeNull()
   })
 })

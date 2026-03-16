@@ -1,86 +1,85 @@
-context('/src/Nodes/Youtube/Vue/', () => {
-  beforeEach(() => {
-    cy.visit('/src/Nodes/Youtube/Vue/')
+import { expect,test } from '@playwright/test'
+
+test.describe('/src/Nodes/Youtube/Vue/', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/src/Nodes/Youtube/Vue/')
   })
 
-  beforeEach(() => {
-    cy.get('.tiptap').type('{selectall}{backspace}')
+  test.beforeEach(async ({ page }) => {
+    await page.keyboard.press('Control+a')
+    await page.keyboard.press('Backspace')
   })
 
-  it('adds a video', () => {
-    cy.window().then(win => {
-      cy.stub(win, 'prompt').returns('https://music.youtube.com/watch?v=hBp4dgE7Bho&feature=share')
-      cy.get('#add').eq(0).click()
-      cy.get('.tiptap div[data-youtube-video] iframe')
-        .should('have.length', 1)
-        .invoke('attr', 'src')
-        .then(src => {
-          const url = new URL(src)
-
-          expect(`${url.origin}${url.pathname}`).to.eq('https://www.youtube-nocookie.com/embed/hBp4dgE7Bho')
-          expect([...url.searchParams.keys()]).to.have.members(['controls', 'rel'])
-          expect(url.searchParams.get('controls')).to.eq('0')
-          expect(url.searchParams.get('rel')).to.eq('1')
-        })
+  test('adds a video', async ({ page }) => {
+    await page.evaluate(() => {
+      window.prompt = () => 'https://music.youtube.com/watch?v=hBp4dgE7Bho&feature=share'
     })
+    await page.locator('#add').first().click()
+    await expect(page.locator('.tiptap div[data-youtube-video] iframe')).toHaveCount(1)
+    const src = await page.locator('.tiptap div[data-youtube-video] iframe').getAttribute('src')
+    const url = new URL(src)
+
+    expect(`${url.origin}${url.pathname}`).toBe('https://www.youtube-nocookie.com/embed/hBp4dgE7Bho')
+    expect([...url.searchParams.keys()].sort()).toEqual(['controls', 'rel'].sort())
+    expect(url.searchParams.get('controls')).toBe('0')
+    expect(url.searchParams.get('rel')).toBe('1')
   })
 
-  it('adds a video with 320 width and 240 height', () => {
-    cy.window().then(win => {
-      cy.stub(win, 'prompt').returns('https://music.youtube.com/watch?v=hBp4dgE7Bho&feature=share')
-      cy.get('#width').type('{selectall}{backspace}320')
-      cy.get('#height').type('{selectall}{backspace}240')
-      cy.get('#add').eq(0).click()
-      cy.get('.tiptap div[data-youtube-video] iframe')
-        .should('have.length', 1)
-        .should('have.css', 'width', '320px')
-        .should('have.css', 'height', '240px')
-        .invoke('attr', 'src')
-        .then(src => {
-          const url = new URL(src)
-
-          expect(`${url.origin}${url.pathname}`).to.eq('https://www.youtube-nocookie.com/embed/hBp4dgE7Bho')
-          expect([...url.searchParams.keys()]).to.have.members(['controls', 'rel'])
-          expect(url.searchParams.get('controls')).to.eq('0')
-          expect(url.searchParams.get('rel')).to.eq('1')
-        })
+  test('adds a video with 320 width and 240 height', async ({ page }) => {
+    await page.evaluate(() => {
+      window.prompt = () => 'https://music.youtube.com/watch?v=hBp4dgE7Bho&feature=share'
     })
+    await page.locator('#width').press('Control+a')
+    await page.keyboard.press('Backspace')
+    await page.locator('#width').pressSequentially('320')
+    await page.locator('#height').press('Control+a')
+    await page.keyboard.press('Backspace')
+    await page.locator('#height').pressSequentially('240')
+    await page.locator('#add').first().click()
+    const iframe = page.locator('.tiptap div[data-youtube-video] iframe')
+    await expect(iframe).toHaveCount(1)
+    await expect(iframe).toHaveCSS('width', '320px')
+    await expect(iframe).toHaveCSS('height', '240px')
+    const src = await iframe.getAttribute('src')
+    const url = new URL(src)
+
+    expect(`${url.origin}${url.pathname}`).toBe('https://www.youtube-nocookie.com/embed/hBp4dgE7Bho')
+    expect([...url.searchParams.keys()].sort()).toEqual(['controls', 'rel'].sort())
+    expect(url.searchParams.get('controls')).toBe('0')
+    expect(url.searchParams.get('rel')).toBe('1')
   })
 
-  it('replaces a video', () => {
-    cy.window().then(win => {
-      const promptStub = cy.stub(win, 'prompt')
-      promptStub.onFirstCall().returns('https://music.youtube.com/watch?v=hBp4dgE7Bho&feature=share')
-      promptStub.onSecondCall().returns('https://music.youtube.com/watch?v=wRakoMYVHm8')
-
-      cy.get('#add').eq(0).click()
-      cy.get('.tiptap div[data-youtube-video] iframe')
-        .should('have.length', 1)
-        .invoke('attr', 'src')
-        .then(src => {
-          const url = new URL(src)
-
-          expect(`${url.origin}${url.pathname}`).to.eq('https://www.youtube-nocookie.com/embed/hBp4dgE7Bho')
-          expect([...url.searchParams.keys()]).to.have.members(['controls', 'rel'])
-          expect(url.searchParams.get('controls')).to.eq('0')
-          expect(url.searchParams.get('rel')).to.eq('1')
-        })
-
-      cy.get('.tiptap div[data-youtube-video] iframe').click()
-
-      cy.get('#add').eq(0).click()
-
-      cy.get('.tiptap div[data-youtube-video] iframe')
-        .should('have.length', 1)
-        .invoke('attr', 'src')
-        .then(src => {
-          const url = new URL(src)
-
-          expect(`${url.origin}${url.pathname}`).to.eq('https://www.youtube-nocookie.com/embed/wRakoMYVHm8')
-          expect([...url.searchParams.keys()]).to.have.members(['controls', 'rel'])
-          expect(url.searchParams.get('controls')).to.eq('0')
-          expect(url.searchParams.get('rel')).to.eq('1')
-        })
+  test('replaces a video', async ({ page }) => {
+    await page.evaluate(() => {
+      let promptCallCount = 0
+      window.prompt = () => {
+        promptCallCount += 1
+        if (promptCallCount === 1) {return 'https://music.youtube.com/watch?v=hBp4dgE7Bho&feature=share'}
+        return 'https://music.youtube.com/watch?v=wRakoMYVHm8'
+      }
     })
+
+    await page.locator('#add').first().click()
+    await expect(page.locator('.tiptap div[data-youtube-video] iframe')).toHaveCount(1)
+    const src1 = await page.locator('.tiptap div[data-youtube-video] iframe').getAttribute('src')
+    const url1 = new URL(src1)
+
+    expect(`${url1.origin}${url1.pathname}`).toBe('https://www.youtube-nocookie.com/embed/hBp4dgE7Bho')
+    expect([...url1.searchParams.keys()].sort()).toEqual(['controls', 'rel'].sort())
+    expect(url1.searchParams.get('controls')).toBe('0')
+    expect(url1.searchParams.get('rel')).toBe('1')
+
+    await page.locator('.tiptap div[data-youtube-video] iframe').click()
+
+    await page.locator('#add').first().click()
+
+    await expect(page.locator('.tiptap div[data-youtube-video] iframe')).toHaveCount(1)
+    const src2 = await page.locator('.tiptap div[data-youtube-video] iframe').getAttribute('src')
+    const url2 = new URL(src2)
+
+    expect(`${url2.origin}${url2.pathname}`).toBe('https://www.youtube-nocookie.com/embed/wRakoMYVHm8')
+    expect([...url2.searchParams.keys()].sort()).toEqual(['controls', 'rel'].sort())
+    expect(url2.searchParams.get('controls')).toBe('0')
+    expect(url2.searchParams.get('rel')).toBe('1')
   })
 })
