@@ -1,5 +1,17 @@
 import { expect, test } from '@playwright/test'
-import { paste } from "tiptap/tests/e2e/helpers.ts"
+
+async function paste(page, selector, payload, type = 'text/plain') {
+  await page.evaluate(
+    ({ sel, data, dataType }) => {
+      const el = document.querySelector(sel)
+      const clipboardData = new DataTransfer()
+
+      clipboardData.setData(dataType, data)
+      el.dispatchEvent(new ClipboardEvent('paste', { bubbles: true, cancelable: true, clipboardData }))
+    },
+    { sel: selector, data: payload, dataType: type },
+  )
+}
 
 test.describe('/src/Marks/Link/React/', () => {
   test.beforeEach(async ({ page }) => {
