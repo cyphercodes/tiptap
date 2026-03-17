@@ -54,6 +54,9 @@ jobs:
           path: |
             .turbo
             **/.eslintcache
+            packages/*/dist/**
+            packages/pm/*/dist/**
+            packages-deprecated/*/dist/**
           key: ${{ runner.os }}-turbo-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-turbo-${{ github.sha }}
