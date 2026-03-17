@@ -1,5 +1,23 @@
 # Change Log
 
+## 3.20.3
+
+### Patch Changes
+
+- f4f6be2: Generate a stable per-instance menu plugin key automatically when `pluginKey` is omitted, so multiple BubbleMenu or FloatingMenu components can be mounted without colliding.
+- Updated dependencies [c94fac4]
+- Updated dependencies [6b9ea92]
+  - @tiptap/core@3.20.3
+  - @tiptap/pm@3.20.3
+
+## 3.20.2
+
+### Patch Changes
+
+- Updated dependencies [269823d]
+  - @tiptap/core@3.20.2
+  - @tiptap/pm@3.20.2
+
 ## 3.20.1
 
 ### Patch Changes
