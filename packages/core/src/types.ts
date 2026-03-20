@@ -293,6 +293,10 @@ export interface EditorOptions {
    */
   element: Element | { mount: HTMLElement } | ((editor: HTMLElement) => void) | null
   /**
+   * The editor view class to use. By default, the editor uses the `EditorView` class from `prosemirror-view`, but you can provide your own implementation if you need to customize the editor's behavior at a low level.
+   */
+  editorView?: typeof EditorView
+  /**
    * The content of the editor (HTML, JSON, or a JSON array)
    */
   content: Content
