@@ -128,7 +128,13 @@ describe('suggestion integration', () => {
 
 describe('suggestion dismissal', () => {
   /** Builds a minimal editor with a single @-mention suggestion and returns helpers. */
-  function setup() {
+  function setup(
+    options: {
+      allowSpaces?: boolean
+      allowToIncludeChar?: boolean
+      shouldResetDismissed?: Parameters<typeof Suggestion>[0]['shouldResetDismissed']
+    } = {},
+  ) {
     const onStart = vi.fn()
     const onUpdate = vi.fn()
     const onExit = vi.fn()
@@ -140,7 +146,10 @@ describe('suggestion dismissal', () => {
           Suggestion({
             editor: this.editor,
             char: '@',
+            allowSpaces: options.allowSpaces,
+            allowToIncludeChar: options.allowToIncludeChar,
             items: () => [],
+            shouldResetDismissed: options.shouldResetDismissed,
             render: () => ({ onStart, onUpdate, onExit }),
           }),
         ]
@@ -176,6 +185,74 @@ describe('suggestion dismissal', () => {
 
     expect(onStart.mock.calls.length).toBe(startCallsBefore)
     expect(onUpdate.mock.calls.length).toBe(updateCallsBefore)
+
+    editor.destroy()
+  })
+
+  it('removes the suggestion decoration when the suggestion is dismissed', async () => {
+    const { editor } = setup()
+
+    editor.chain().insertContent('@foo').run()
+    await Promise.resolve()
+
+    expect(editor.view.dom.querySelector('.suggestion')).not.toBeNull()
+
+    exitSuggestion(editor.view, SuggestionPluginKey)
+    await Promise.resolve()
+
+    expect(editor.view.dom.querySelector('.suggestion')).toBeNull()
+
+    editor.destroy()
+  })
+
+  it('removes the suggestion decoration on Escape even when the renderer handles the keydown', async () => {
+    const MentionExtension = Extension.create({
+      name: 'mention-escape-handled',
+      addProseMirrorPlugins() {
+        return [
+          Suggestion({
+            editor: this.editor,
+            char: '@',
+            items: () => [],
+            render: () => ({
+              onKeyDown: ({ event }) => event.key === 'Escape',
+            }),
+          }),
+        ]
+      },
+    })
+
+    const editor = new Editor({
+      extensions: [StarterKit, MentionExtension],
+      content: '<p></p>',
+    })
+
+    editor.chain().insertContent('@foo').run()
+    await Promise.resolve()
+
+    expect(editor.view.dom.querySelector('.suggestion')).not.toBeNull()
+
+    editor.view.someProp('handleKeyDown', f => f(editor.view, new KeyboardEvent('keydown', { key: 'Escape' })))
+    await Promise.resolve()
+
+    expect(editor.view.dom.querySelector('.suggestion')).toBeNull()
+
+    editor.destroy()
+  })
+
+  it('keeps the suggestion decoration removed while dismissal is being preserved', async () => {
+    const { editor } = setup({ allowSpaces: true })
+
+    editor.chain().insertContent('@foo').run()
+    await Promise.resolve()
+
+    exitSuggestion(editor.view, SuggestionPluginKey)
+    await Promise.resolve()
+
+    editor.chain().insertContent(' bar').run()
+    await Promise.resolve()
+
+    expect(editor.view.dom.querySelector('.suggestion')).toBeNull()
 
     editor.destroy()
   })
@@ -222,6 +299,48 @@ describe('suggestion dismissal', () => {
     editor.destroy()
   })
 
+  it('keeps the suggestion dismissed across spaces when allowSpaces is enabled', async () => {
+    const { editor, onStart, onUpdate } = setup({ allowSpaces: true })
+
+    editor.chain().insertContent('@foo').run()
+    await Promise.resolve()
+    expect(onStart).toHaveBeenCalledTimes(1)
+
+    exitSuggestion(editor.view, SuggestionPluginKey)
+    await Promise.resolve()
+
+    const startCallsBefore = onStart.mock.calls.length
+    const updateCallsBefore = onUpdate.mock.calls.length
+
+    editor.chain().insertContent(' bar').run()
+    await Promise.resolve()
+
+    expect(onStart.mock.calls.length).toBe(startCallsBefore)
+    expect(onUpdate.mock.calls.length).toBe(updateCallsBefore)
+
+    editor.destroy()
+  })
+
+  it('does not treat spaces as part of the dismissed context when allowToIncludeChar disables allowSpaces', async () => {
+    const { editor, onStart } = setup({ allowSpaces: true, allowToIncludeChar: true })
+
+    editor.chain().insertContent('@foo').run()
+    await Promise.resolve()
+    expect(onStart).toHaveBeenCalledTimes(1)
+
+    exitSuggestion(editor.view, SuggestionPluginKey)
+    await Promise.resolve()
+
+    const startCallsBefore = onStart.mock.calls.length
+
+    editor.chain().insertContent(' @').run()
+    await Promise.resolve()
+
+    expect(onStart.mock.calls.length).toBeGreaterThan(startCallsBefore)
+
+    editor.destroy()
+  })
+
   it('re-opens the suggestion when the trigger char is deleted and retyped', async () => {
     const { editor, onStart } = setup()
 
@@ -261,6 +380,28 @@ describe('suggestion dismissal', () => {
     editor.chain().insertContent(' @').run()
     await Promise.resolve()
 
+    expect(onStart.mock.calls.length).toBeGreaterThan(startCallsBefore)
+
+    editor.destroy()
+  })
+
+  it('allows consumers to reset the dismissed context manually', async () => {
+    const shouldResetDismissed = vi.fn(({ transaction }) =>
+      transaction.doc.textBetween(0, transaction.doc.content.size, '\n').includes('.'),
+    )
+    const { editor, onStart } = setup({ shouldResetDismissed })
+
+    editor.chain().insertContent('@foo').run()
+    await Promise.resolve()
+    exitSuggestion(editor.view, SuggestionPluginKey)
+    await Promise.resolve()
+
+    const startCallsBefore = onStart.mock.calls.length
+
+    editor.chain().insertContent('.').run()
+    await Promise.resolve()
+
+    expect(shouldResetDismissed).toHaveBeenCalled()
     expect(onStart.mock.calls.length).toBeGreaterThan(startCallsBefore)
 
     editor.destroy()

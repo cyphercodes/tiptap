@@ -4,6 +4,7 @@ import { Plugin, PluginKey } from '@tiptap/pm/state'
 import type { EditorView } from '@tiptap/pm/view'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
 
+import type { SuggestionMatch } from './findSuggestionMatch.js'
 import { findSuggestionMatch as defaultFindSuggestionMatch } from './findSuggestionMatch.js'
 
 /**
@@ -51,6 +52,19 @@ export interface SuggestionOptions<I = any, TSelected = any> {
     query: string
     text: string
     transaction: Transaction
+  }) => boolean
+
+  /**
+   * Controls when a dismissed suggestion becomes active again.
+   * Return `true` to clear the dismissed context for the current transaction.
+   */
+  shouldResetDismissed?: (props: {
+    editor: Editor
+    state: EditorState
+    range: Range
+    match: Exclude<SuggestionMatch, null>
+    transaction: Transaction
+    allowSpaces: boolean
   }) => boolean
 
   /**
@@ -241,9 +255,11 @@ export function Suggestion<I = any, TSelected = any>({
   allow = () => true,
   findSuggestionMatch = defaultFindSuggestionMatch,
   shouldShow,
+  shouldResetDismissed,
 }: SuggestionOptions<I, TSelected>) {
   let props: SuggestionProps<I, TSelected> | undefined
   const renderer = render?.()
+  const effectiveAllowSpaces = allowSpaces && !allowToIncludeChar
 
   // Gets the DOM rectangle corresponding to the current editor cursor anchor position
   // Calculates screen coordinates based on Tiptap's cursor position and converts to a DOMRect object
@@ -276,6 +292,38 @@ export function Suggestion<I = any, TSelected = any>({
       return currentDecorationNode?.getBoundingClientRect() || null
     }
   }
+
+  const shouldKeepDismissed = ({
+    match,
+    dismissedRange,
+    state,
+    transaction,
+  }: {
+    match: Exclude<SuggestionMatch, null>
+    dismissedRange: Range
+    state: EditorState
+    transaction: Transaction
+  }) => {
+    if (
+      shouldResetDismissed?.({
+        editor,
+        state,
+        range: dismissedRange,
+        match,
+        transaction,
+        allowSpaces: effectiveAllowSpaces,
+      })
+    ) {
+      return false
+    }
+
+    if (effectiveAllowSpaces) {
+      return match.range.from === dismissedRange.from
+    }
+
+    return match.range.from === dismissedRange.from && !hasInsertedWhitespace(transaction)
+  }
+
   // small helper used internally by the view to dispatch an exit
   function dispatchExit(view: EditorView, pluginKeyRef: PluginKey) {
     try {
@@ -400,9 +448,7 @@ export function Suggestion<I = any, TSelected = any>({
           text: null | string
           composing: boolean
           decorationId?: string | null
-          /** Position of the trigger char when the suggestion was dismissed via Escape.
-           * Non-null means "stay dismissed until the user leaves this word or inserts whitespace". */
-          dismissedFrom: number | null
+          dismissedRange: Range | null
         } = {
           active: false,
           range: {
@@ -412,7 +458,7 @@ export function Suggestion<I = any, TSelected = any>({
           query: null,
           text: null,
           composing: false,
-          dismissedFrom: null,
+          dismissedRange: null,
         }
 
         return state
@@ -437,18 +483,18 @@ export function Suggestion<I = any, TSelected = any>({
           next.range = { from: 0, to: 0 }
           next.query = null
           next.text = null
-          // Remember where the dismissed suggestion was so we can suppress re-activation
-          // within the same word. If somehow exit fires without an active suggestion, carry
-          // the existing dismissedFrom forward so it isn't accidentally cleared.
-          next.dismissedFrom = prev.active ? prev.range.from : prev.dismissedFrom
+          next.dismissedRange = prev.active ? { ...prev.range } : prev.dismissedRange
 
           return next
         }
 
         next.composing = composing
 
-        if (transaction.docChanged && next.dismissedFrom !== null) {
-          next.dismissedFrom = transaction.mapping.map(next.dismissedFrom)
+        if (transaction.docChanged && next.dismissedRange !== null) {
+          next.dismissedRange = {
+            from: transaction.mapping.map(next.dismissedRange.from),
+            to: transaction.mapping.map(next.dismissedRange.to),
+          }
         }
 
         // We can only be suggesting if the view is editable, and:
@@ -489,17 +535,19 @@ export function Suggestion<I = any, TSelected = any>({
                 transaction,
               }))
           ) {
-            // Resolve dismissed state before activating.
-            // Un-dismiss when: the match is at a different trigger position (different word),
-            // or the user inserted whitespace / a newline (deliberate continuation of input).
-            if (next.dismissedFrom !== null) {
-              const sameWord = match.range.from === next.dismissedFrom
-              if (!sameWord || hasInsertedWhitespace(transaction)) {
-                next.dismissedFrom = null
-              }
+            if (
+              next.dismissedRange !== null &&
+              !shouldKeepDismissed({
+                match,
+                dismissedRange: next.dismissedRange,
+                state,
+                transaction,
+              })
+            ) {
+              next.dismissedRange = null
             }
 
-            if (next.dismissedFrom === null) {
+            if (next.dismissedRange === null) {
               next.active = true
               next.decorationId = prev.decorationId ? prev.decorationId : decorationId
               next.range = match.range
@@ -509,10 +557,8 @@ export function Suggestion<I = any, TSelected = any>({
               next.active = false
             }
           } else {
-            // No match means the cursor has left any trigger context entirely —
-            // safe to forget the dismissed position so the next trigger starts fresh.
             if (!match) {
-              next.dismissedFrom = null
+              next.dismissedRange = null
             }
             next.active = false
           }
@@ -547,42 +593,10 @@ export function Suggestion<I = any, TSelected = any>({
         // document (avoids transaction mapping/mismatch issues).
         if (event.key === 'Escape' || event.key === 'Esc') {
           const state = plugin.getState(view.state)
-          const cachedNode = props?.decorationNode ?? null
-          const decorationNode =
-            cachedNode ??
-            (state?.decorationId ? view.dom.querySelector(`[data-decoration-id="${state.decorationId}"]`) : null)
 
-          // Give the consumer a chance to handle Escape via onKeyDown first.
-          // If the consumer returns `true` we assume they handled the event and
-          // we won't call onExit/dispatchExit so they can both prevent
-          // propagation and decide whether to close the suggestion themselves.
-          const handledByKeyDown = renderer?.onKeyDown?.({ view, event, range: state.range }) || false
-
-          if (handledByKeyDown) {
-            return true
-          }
-
-          const exitProps: SuggestionProps = {
-            editor,
-            range: state.range,
-            query: state.query,
-            text: state.text,
-            items: [],
-            command: commandProps => {
-              return command({ editor, range: state.range, props: commandProps as any })
-            },
-            decorationNode,
-            // If we have a cached decoration node, use it for the clientRect
-            // to avoid another DOM lookup. If not, leave clientRect null and
-            // let consumer decide if they want to query.
-            clientRect: decorationNode
-              ? () => {
-                  return decorationNode.getBoundingClientRect() || null
-                }
-              : null,
-          }
-
-          renderer?.onExit?.(exitProps)
+          // Allow the consumer to react to Escape, but always clear the
+          // suggestion state afterward so the decoration is removed too.
+          renderer?.onKeyDown?.({ view, event, range: state.range })
 
           // dispatch metadata-only transaction to unset the plugin state
           dispatchExit(view, pluginKey)
