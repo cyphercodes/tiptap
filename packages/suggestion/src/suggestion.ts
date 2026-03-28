@@ -447,6 +447,10 @@ export function Suggestion<I = any, TSelected = any>({
 
         next.composing = composing
 
+        if (transaction.docChanged && next.dismissedFrom !== null) {
+          next.dismissedFrom = transaction.mapping.map(next.dismissedFrom)
+        }
+
         // We can only be suggesting if the view is editable, and:
         //   * there is no selection, or
         //   * a composition is active (see: https://github.com/ueberdosis/tiptap/issues/1449)

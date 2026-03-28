@@ -200,6 +200,28 @@ describe('suggestion dismissal', () => {
     editor.destroy()
   })
 
+  it('re-opens the suggestion after a newline is inserted following dismissal', async () => {
+    const { editor, onStart } = setup()
+
+    // Trigger and dismiss
+    editor.chain().insertContent('@foo').run()
+    await Promise.resolve()
+    exitSuggestion(editor.view, SuggestionPluginKey)
+    await Promise.resolve()
+
+    const startCallsBefore = onStart.mock.calls.length
+
+    // Newline clears dismissed state; typing a new @ afterwards should open suggestion
+    editor.commands.enter()
+    await Promise.resolve()
+    editor.chain().insertContent('@').run()
+    await Promise.resolve()
+
+    expect(onStart.mock.calls.length).toBeGreaterThan(startCallsBefore)
+
+    editor.destroy()
+  })
+
   it('re-opens the suggestion when the trigger char is deleted and retyped', async () => {
     const { editor, onStart } = setup()
 
