@@ -1,5 +1,13 @@
 # Change Log
 
+## 3.22.0
+
+### Patch Changes
+
+- 912a49b: Fix HTML character escaping in markdown roundtrip. HTML entities (`&lt;`, `&gt;`, `&amp;`, `&quot;`) are now decoded to literal characters when parsing markdown into the editor. `<`, `>`, and `&` are re-encoded when serializing back to markdown, while `"` is preserved as a literal character since double quotes are ordinary in markdown. Code detection for skipping encoding now uses the `code: true` extension spec instead of hardcoded type names. Literal characters inside code blocks and inline code are always preserved.
+- f99bdc2: Guard mark delete event handling when `unsetMark` removes a mark from inline content that starts at position `0`, preventing a `RangeError` during the before-node lookup.
+  - @tiptap/pm@3.22.0
+
 ## 3.21.0
 
 ### Patch Changes

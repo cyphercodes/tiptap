@@ -1,5 +1,26 @@
 # Releases
 
+## v3.22.0
+
+### @tiptap/core
+
+#### Patch Changes
+
+- Fix HTML character escaping in markdown roundtrip. HTML entities (`&lt;`, `&gt;`, `&amp;`, `&quot;`) are now decoded to literal characters when parsing markdown into the editor. `<`, `>`, and `&` are re-encoded when serializing back to markdown, while `"` is preserved as a literal character since double quotes are ordinary in markdown. Code detection for skipping encoding now uses the `code: true` extension spec instead of hardcoded type names. Literal characters inside code blocks and inline code are always preserved.
+- Guard mark delete event handling when `unsetMark` removes a mark from inline content that starts at position `0`, preventing a `RangeError` during the before-node lookup.
+
+### @tiptap/markdown
+
+#### Patch Changes
+
+- Fix HTML character escaping in markdown roundtrip. HTML entities (`&lt;`, `&gt;`, `&amp;`, `&quot;`) are now decoded to literal characters when parsing markdown into the editor. `<`, `>`, and `&` are re-encoded when serializing back to markdown, while `"` is preserved as a literal character since double quotes are ordinary in markdown. Code detection for skipping encoding now uses the `code: true` extension spec instead of hardcoded type names. Literal characters inside code blocks and inline code are always preserved.
+
+### @tiptap/extension-table
+
+#### Minor Changes
+
+- Added Markdown table alignment support. The `TableCell` and `TableHeader` nodes now have an `align` attribute (`left`, `center`, `right`) that is parsed from Markdown column alignment markers (`:---`, `---:`, `:---:`) and serialized back when rendering to Markdown. Alignment is also parsed from and rendered to HTML via `style="text-align: ..."`.
+
 ## v3.21.0
 
 ### @tiptap/extension-details
